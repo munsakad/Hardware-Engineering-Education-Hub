@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hardware Engineering Education Hub</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="index.html"><span class="chip">&#9633;</span> Hardware Engineering Education Hub</a>
+      <ul class="nav-links">
+        <li><a href="index.html" data-page="index.html">Home</a></li>
+        <li><a href="pages/courses.html" data-page="courses.html">Courses</a></li>
+        <li><a href="pages/dashboard.html" data-page="dashboard.html">Dashboard</a></li>
+        <li data-nav-auth style="display:flex; gap:1.25rem;"></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Learn hardware engineering from the ground up</h1>
+      <p>
+        Free, hands-on courses covering electricity &amp; electronics basics, digital logic design,
+        PCB design, and robotics &mdash; plus the languages that bring hardware to life:
+        Verilog, VHDL, and Arduino.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="pages/courses.html">Browse courses</a>
+        <a class="btn btn-secondary" href="pages/register.html">Create a free account</a>
+      </div>
+    </section>
+
+    <section>
+      <h2>What you'll learn</h2>
+      <div class="card-grid">
+        <div class="card">
+          <span class="tag">Fundamentals</span>
+          <h3>Electricity &amp; Electronics Basics</h3>
+          <p>Voltage, current, resistance, and the components every circuit is built from.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Fundamentals</span>
+          <h3>Digital Logic Design</h3>
+          <p>Boolean algebra, logic gates, and sequential circuits.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Design</span>
+          <h3>PCB Design</h3>
+          <p>From schematic to a manufacturable printed circuit board.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Design</span>
+          <h3>Robotics</h3>
+          <p>Sensors, actuators, motor control, and control loops.</p>
+        </div>
+        <div class="card">
+          <span class="tag">HDL &amp; Embedded</span>
+          <h3>Verilog &amp; VHDL</h3>
+          <p>Describe and simulate digital hardware with industry-standard HDLs.</p>
+        </div>
+        <div class="card">
+          <span class="tag">HDL &amp; Embedded</span>
+          <h3>Arduino</h3>
+          <p>Program microcontrollers to sense and act on the physical world.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    &copy; 2026 Hardware Engineering Education Hub
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

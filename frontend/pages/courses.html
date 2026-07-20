@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Courses — Hardware Engineering Education Hub</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="../index.html"><span class="chip">&#9633;</span> Hardware Engineering Education Hub</a>
+      <ul class="nav-links">
+        <li><a href="../index.html" data-page="index.html">Home</a></li>
+        <li><a href="courses.html" data-page="courses.html">Courses</a></li>
+        <li><a href="dashboard.html" data-page="dashboard.html">Dashboard</a></li>
+        <li data-nav-auth style="display:flex; gap:1.25rem;"></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Course Catalog</h1>
+    <p>Pick a topic below to start learning.</p>
+    <div class="card-grid" id="course-grid">
+      <p class="empty-state">Loading courses&hellip;</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    &copy; 2026 Hardware Engineering Education Hub
+  </footer>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/main.js"></script>
+  <script src="../js/courses.js"></script>
+</body>
+</html>
