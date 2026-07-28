@@ -2672,6 +2672,138 @@ void loop() {
 ),
 (
   (SELECT id FROM courses WHERE slug = 'arduino'),
+  'arduino-cpp-basics',
+  'Arduino C++ Basics',
+  '<h3>Arduino programs are C++</h3>
+  <p>An Arduino "sketch" is a C++ program with two required functions (<code>setup()</code> and <code>loop()</code>) and access to a large set of built-in functions for talking to pins, timers, and peripherals. Everything else about the C++ language -- variables, types, operators, control flow -- works exactly the same as it does off a microcontroller.</p>
+
+  <h3>Variables and data types</h3>
+  <p>A variable must be declared with a type before it is used. Common types on Arduino, and how many bytes of memory each one uses on a typical 8-bit board (like the Uno):</p>
+  <table class="data-table">
+    <caption>Common Arduino data types (on AVR-based boards such as the Uno)</caption>
+    <thead><tr><th>Type</th><th>Size</th><th>Range</th><th>Typical use</th></tr></thead>
+    <tbody>
+      <tr><td>bool</td><td>1 byte</td><td>true / false</td><td>Flags, on/off states</td></tr>
+      <tr><td>byte</td><td>1 byte</td><td>0 to 255</td><td>Raw pin values, small counters</td></tr>
+      <tr><td>int</td><td>2 bytes</td><td>-32,768 to 32,767</td><td>General-purpose whole numbers</td></tr>
+      <tr><td>unsigned int</td><td>2 bytes</td><td>0 to 65,535</td><td>Counters that never go negative</td></tr>
+      <tr><td>long</td><td>4 bytes</td><td>&asymp; &plusmn;2.1 billion</td><td>Larger counters, e.g. milliseconds since startup</td></tr>
+      <tr><td>float</td><td>4 bytes</td><td>&asymp; &plusmn;3.4&times;10^38 (about 6-7 significant digits)</td><td>Sensor readings, calculations needing decimals</td></tr>
+      <tr><td>char</td><td>1 byte</td><td>-128 to 127, or one character</td><td>Single characters, small numbers</td></tr>
+    </tbody>
+  </table>
+  <p>On 32-bit boards (many newer Arduino-compatible boards), <code>int</code> is often 4 bytes instead of 2 -- always check the specific board&prime;s documentation rather than assuming.</p>
+
+  <h3>Constants</h3>
+  <pre><code>const int LED_PIN = 13;        // will not change; the compiler enforces this
+#define BUZZER_PIN 8            // a preprocessor text substitution, an older style</code></pre>
+  <p><code>const</code> is generally preferred over <code>#define</code> in modern code, since it is type-checked and scoped like a normal variable rather than being a blind text substitution performed before compilation even starts.</p>
+
+  <h3>Operators</h3>
+  <table class="data-table">
+    <caption>Common operators</caption>
+    <thead><tr><th>Category</th><th>Operators</th></tr></thead>
+    <tbody>
+      <tr><td>Arithmetic</td><td>+  -  *  /  % (modulo/remainder)</td></tr>
+      <tr><td>Comparison</td><td>==  !=  &lt;  &gt;  &lt;=  &gt;=</td></tr>
+      <tr><td>Logical</td><td>&amp;&amp; (and)  || (or)  ! (not)</td></tr>
+      <tr><td>Bitwise</td><td>&amp; (and)  | (or)  ^ (xor)  ~ (not)  &lt;&lt; (shift left)  &gt;&gt; (shift right)</td></tr>
+      <tr><td>Compound assignment</td><td>+=  -=  *=  /=  ++  --</td></tr>
+    </tbody>
+  </table>
+  <p>Bitwise operators come up constantly in embedded code -- for example, reading or setting one bit of a hardware register without disturbing the others.</p>',
+  2
+),
+(
+  (SELECT id FROM courses WHERE slug = 'arduino'),
+  'control-structures-in-arduino',
+  'Control Structures',
+  '<h3>Conditional branching</h3>
+  <pre><code>if (temperature &gt; 30) {
+    digitalWrite(FAN_PIN, HIGH);
+} else if (temperature &gt; 20) {
+    digitalWrite(FAN_PIN, LOW);
+} else {
+    digitalWrite(HEATER_PIN, HIGH);
+}</code></pre>
+
+  <h3>switch statements</h3>
+  <p>A <code>switch</code> is often clearer than a long chain of <code>if/else if</code> when comparing one variable against several fixed values.</p>
+  <pre><code>switch (mode) {
+    case 0:
+        // idle
+        break;
+    case 1:
+        // running
+        break;
+    default:
+        // unknown mode
+        break;
+}</code></pre>
+  <p>Forgetting <code>break</code> is a classic bug: without it, execution "falls through" into the next case instead of exiting the switch.</p>
+
+  <h3>for loops</h3>
+  <pre><code>for (int i = 0; i &lt; 10; i++) {
+    digitalWrite(LED_PIN, HIGH);
+    delay(100);
+    digitalWrite(LED_PIN, LOW);
+    delay(100);
+}</code></pre>
+  <p>This blinks an LED 10 times, spending 2 seconds total inside the loop before continuing to whatever comes next -- an important detail, since <code>delay()</code> blocks the whole program while it runs (the Timers & Non-Blocking Timing lesson later in this course covers how to avoid that).</p>
+
+  <h3>while and do-while loops</h3>
+  <pre><code>while (digitalRead(BUTTON_PIN) == HIGH) {
+    // wait here until the button is pressed
+}</code></pre>
+  <p>A <code>while</code> loop like this is a simple (if blocking) way to wait for an event. <code>do { ... } while (condition);</code> works the same way but always runs its body at least once, checking the condition only after the first pass.</p>
+
+  <h3>break and continue</h3>
+  <p><code>break</code> exits a loop (or switch) immediately; <code>continue</code> skips the rest of the current loop iteration and jumps straight to the next one.</p>',
+  3
+),
+(
+  (SELECT id FROM courses WHERE slug = 'arduino'),
+  'functions-and-scope',
+  'Functions & Scope',
+  '<h3>Defining a function</h3>
+  <pre><code>int addTwoNumbers(int a, int b) {
+    return a + b;
+}
+
+void blinkLed(int pin, int times) {
+    for (int i = 0; i &lt; times; i++) {
+        digitalWrite(pin, HIGH);
+        delay(200);
+        digitalWrite(pin, LOW);
+        delay(200);
+    }
+}</code></pre>
+  <p>A function&prime;s return type comes first (<code>void</code> if it returns nothing), followed by its name and a parenthesized parameter list. <code>setup()</code> and <code>loop()</code> are simply two functions that the Arduino core calls automatically -- <code>setup()</code> once at startup, <code>loop()</code> repeatedly forever afterward.</p>
+
+  <h3>Local vs. global variables and scope</h3>
+  <table class="data-table">
+    <caption>Local vs. global variables</caption>
+    <thead><tr><th>Kind</th><th>Declared</th><th>Visible from</th><th>Lifetime</th></tr></thead>
+    <tbody>
+      <tr><td>Local</td><td>Inside a function or block</td><td>Only within that function or block</td><td>Created when the block starts, destroyed when it ends</td></tr>
+      <tr><td>Global</td><td>Outside any function, at the top of the sketch</td><td>Every function in the file</td><td>Exists for the entire time the program runs</td></tr>
+    </tbody>
+  </table>
+  <p>Values that must survive between calls to <code>loop()</code> -- like a running counter, or the last time an event happened -- need to be global (or, equivalently, declared <code>static</code> inside the function).</p>
+
+  <h3>Passing parameters by value vs. by reference</h3>
+  <pre><code>void doubleIt(int x) {
+    x = x * 2;            // only changes the local copy
+}
+
+void doubleItByReference(int &amp;x) {
+    x = x * 2;             // changes the caller''s original variable
+}</code></pre>
+  <p>By default, arguments are passed by value -- the function receives its own copy, and changes inside the function do not affect the caller&prime;s variable. Adding <code>&amp;</code> after the type makes the parameter a reference, letting the function modify the caller&prime;s original variable directly -- useful for functions that need to report back more than one result.</p>',
+  4
+),
+(
+  (SELECT id FROM courses WHERE slug = 'arduino'),
   'digital-analog-io',
   'Digital & Analog I/O',
   '<h3>Digital I/O</h3>
@@ -2695,7 +2827,127 @@ float voltage = sensorValue * (5.0 / 1023.0);</code></pre>
       <tr><td>A0-A5</td><td>Analog input</td><td>Can also be used as extra digital I/O pins</td></tr>
     </tbody>
   </table>',
-  2
+  5
+),
+(
+  (SELECT id FROM courses WHERE slug = 'arduino'),
+  'pwm-and-analog-output',
+  'PWM & Analog Output',
+  '<h3>Why analogWrite() is not really analog</h3>
+  <p>Most Arduino pins cannot output a true, continuously variable voltage -- <code>analogWrite()</code> instead uses Pulse Width Modulation (PWM), rapidly switching the pin fully on and off so the <em>average</em> voltage approximates the value requested.</p>
+  <pre><code>analogWrite(9, 128);   // roughly 50% duty cycle on a PWM-capable pin</code></pre>
+  <p>On most AVR-based boards, <code>analogWrite()</code> accepts values from 0 (always off) to 255 (always on), and only works on pins marked with a <code>~</code> on the board silkscreen -- those are the pins physically wired to a hardware PWM timer.</p>
+
+  <h3>Duty cycle and effective voltage</h3>
+  <table class="data-table">
+    <caption>PWM value vs. approximate effective voltage (5 V board)</caption>
+    <thead><tr><th>analogWrite() value</th><th>Duty cycle</th><th>Effective voltage</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0%</td><td>0 V</td></tr>
+      <tr><td>64</td><td>25%</td><td>1.25 V</td></tr>
+      <tr><td>128</td><td>50%</td><td>2.5 V</td></tr>
+      <tr><td>255</td><td>100%</td><td>5 V</td></tr>
+    </tbody>
+  </table>
+  <p>This is the same duty-cycle idea covered for DC motor speed control in the Robotics course -- <code>analogWrite()</code> is simply the Arduino API for generating that PWM signal.</p>
+
+  <h3>PWM frequency</h3>
+  <p>Most Arduino PWM pins switch around 490 Hz or 980 Hz by default (a few specific pins run faster) -- fast enough that an LED&prime;s brightness or a motor&prime;s speed appears smooth to the eye and to mechanical inertia, but potentially audible as a faint whine on some motors or speakers.</p>
+
+  <h3>Generating a specific tone</h3>
+  <pre><code>tone(BUZZER_PIN, 440, 1000);   // play 440 Hz (concert A) for 1000 ms
+noTone(BUZZER_PIN);              // stop immediately</code></pre>
+  <p><code>tone()</code> is a separate function from <code>analogWrite()</code> -- rather than a fixed-frequency PWM signal with variable duty cycle, it generates a square wave at whatever frequency is requested, which is what makes it useful for musical notes and beeps rather than dimming or speed control.</p>
+
+  <h3>Driving a servo motor</h3>
+  <p>Standard hobby servos are controlled with a different kind of pulse entirely: not a duty-cycle percentage, but a pulse of a specific width (typically 1-2 ms) repeated about every 20 ms, where the pulse width -- not the duty cycle -- encodes the desired angle. The Servo library (covered in the next lesson) handles generating this timing automatically:</p>
+  <pre><code>#include &lt;Servo.h&gt;
+
+Servo myServo;
+
+void setup() {
+    myServo.attach(9);
+}
+
+void loop() {
+    myServo.write(90);   // move to 90 degrees
+    delay(1000);
+}</code></pre>',
+  6
+),
+(
+  (SELECT id FROM courses WHERE slug = 'arduino'),
+  'arrays-strings-and-data-structures',
+  'Arrays, Strings & Data Structures',
+  '<h3>Arrays</h3>
+  <pre><code>int sensorReadings[5];               // an array of 5 ints, initially undefined values
+int ledPins[3] = {2, 3, 4};           // an array initialized with values
+
+for (int i = 0; i &lt; 3; i++) {
+    pinMode(ledPins[i], OUTPUT);
+}</code></pre>
+  <p>Arrays in C++ have a fixed size decided at compile time and are not automatically bounds-checked -- reading or writing past the end of an array silently corrupts whatever memory happens to be next to it, rather than raising an error. Always size loops using the array&prime;s known length (or a named constant) rather than a hard-coded number that might drift out of sync.</p>
+
+  <h3>char arrays (C-strings) vs. the String class</h3>
+  <table class="data-table">
+    <caption>char array vs. String</caption>
+    <thead><tr><th>Aspect</th><th><code>char</code> array</th><th><code>String</code> class</th></tr></thead>
+    <tbody>
+      <tr><td>Storage</td><td>Fixed-size buffer, chosen up front</td><td>Grows and shrinks dynamically on the heap</td></tr>
+      <tr><td>Ease of use</td><td>More manual (needs functions like <code>strcpy</code>, <code>strcat</code>)</td><td>Convenient operators (<code>+</code>, <code>==</code>) and methods</td></tr>
+      <tr><td>Memory risk</td><td>Fixed and predictable</td><td>Repeated concatenation can fragment the tiny heap on small boards, eventually causing crashes</td></tr>
+    </tbody>
+  </table>
+  <pre><code>char greeting[] = "hello";           // a C-string: characters plus a hidden trailing ''\0''
+String greeting2 = "hello";           // a String object</code></pre>
+  <p>On memory-constrained boards like the Uno (2 KB of SRAM total), many experienced Arduino programmers avoid the <code>String</code> class in code that runs for a long time, preferring <code>char</code> arrays specifically to avoid heap fragmentation.</p>
+
+  <h3>structs: grouping related data</h3>
+  <pre><code>struct SensorReading {
+    int pin;
+    float value;
+    unsigned long timestamp;
+};
+
+SensorReading temp = {A0, 23.5, 0};</code></pre>
+  <p>A <code>struct</code> bundles several related pieces of data into one named type, which is often clearer than tracking several separate parallel arrays (one array of pins, another of values, another of timestamps) that all have to stay in sync by hand.</p>',
+  7
+),
+(
+  (SELECT id FROM courses WHERE slug = 'arduino'),
+  'libraries-and-the-arduino-ecosystem',
+  'Libraries & the Arduino Ecosystem',
+  '<h3>What a library is</h3>
+  <p>A library is a pre-written, reusable package of functions (and often a class) that handles something so common it would be wasteful to rewrite from scratch -- driving a specific sensor, generating servo pulses, talking over a communication bus, and so on.</p>
+  <pre><code>#include &lt;Servo.h&gt;   // a library already bundled with the Arduino IDE
+#include &lt;DHT.h&gt;       // a third-party library, installed separately</code></pre>
+
+  <h3>Installing libraries</h3>
+  <table class="data-table">
+    <caption>Ways to add a library</caption>
+    <thead><tr><th>Method</th><th>How</th></tr></thead>
+    <tbody>
+      <tr><td>Library Manager</td><td>Sketch &gt; Include Library &gt; Manage Libraries, then search and install</td></tr>
+      <tr><td>ZIP install</td><td>Sketch &gt; Include Library &gt; Add .ZIP Library, for libraries downloaded manually</td></tr>
+      <tr><td>Manual copy</td><td>Place the library folder directly inside the sketchbook&prime;s <code>libraries</code> folder</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Commonly used built-in libraries</h3>
+  <table class="data-table">
+    <caption>Libraries bundled with the Arduino IDE</caption>
+    <thead><tr><th>Library</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>Servo.h</td><td>Generates the precise pulse timing hobby servos need</td></tr>
+      <tr><td>Wire.h</td><td>I2C communication (see the Communication Protocols lesson)</td></tr>
+      <tr><td>SPI.h</td><td>SPI communication (see the Communication Protocols lesson)</td></tr>
+      <tr><td>EEPROM.h</td><td>Reading and writing the microcontroller&prime;s non-volatile EEPROM memory</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Classes and objects, briefly</h3>
+  <p>Most libraries expose a class -- <code>Servo</code>, for example -- rather than a plain function. Creating a variable of that type (<code>Servo myServo;</code>) makes an <strong>object</strong>, and calling methods on it (<code>myServo.attach(9)</code>, <code>myServo.write(90)</code>) is how the library is actually used. It is entirely possible to use Arduino productively while treating this as "the syntax the library documentation shows me," without first learning object-oriented programming from scratch.</p>',
+  8
 ),
 (
   (SELECT id FROM courses WHERE slug = 'arduino'),
@@ -2728,7 +2980,274 @@ void loop() {
     }
     delay(100);
 }</code></pre>',
-  3
+  9
+),
+(
+  (SELECT id FROM courses WHERE slug = 'arduino'),
+  'interrupts-in-arduino',
+  'Interrupts',
+  '<h3>Why interrupts</h3>
+  <p>Polling a pin inside <code>loop()</code> only checks it whenever <code>loop()</code> happens to reach that line -- a fast or brief event (a button press, an encoder pulse, an incoming signal edge) can be missed entirely if the rest of <code>loop()</code> is busy doing something else at that moment. An interrupt instead pauses whatever the processor is doing and immediately runs a dedicated function the moment a specified event occurs.</p>
+
+  <h3>attachInterrupt()</h3>
+  <pre><code>volatile bool buttonPressed = false;
+
+void setup() {
+    pinMode(2, INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(2), onButtonPress, FALLING);
+}
+
+void onButtonPress() {
+    buttonPressed = true;
+}
+
+void loop() {
+    if (buttonPressed) {
+        buttonPressed = false;
+        // handle the button press here, outside the interrupt itself
+    }
+}</code></pre>
+  <p>Only certain pins support external interrupts (commonly just two on smaller AVR boards), and the trigger condition -- <code>RISING</code>, <code>FALLING</code>, or <code>CHANGE</code> -- determines which edge of the signal fires the interrupt.</p>
+
+  <h3>Rules for writing an interrupt service routine (ISR)</h3>
+  <ul>
+    <li>Keep it as short as possible -- normal program execution, and any other interrupts, are paused while it runs.</li>
+    <li>Never call <code>delay()</code> inside an ISR, and avoid <code>Serial.print()</code> there too.</li>
+    <li>Any variable shared between an ISR and the rest of the program must be declared <code>volatile</code>, so the compiler does not wrongly assume it never changes and optimize away a check of its value.</li>
+    <li>The usual pattern is to have the ISR do the absolute minimum -- typically just setting a flag or a variable -- and let <code>loop()</code> do the real work once it next checks that flag.</li>
+  </ul>
+
+  <h3>Debouncing a mechanical button</h3>
+  <p>A mechanical switch does not transition cleanly -- it "bounces," producing several rapid, spurious transitions over a few milliseconds as the contacts physically settle. Both interrupt-driven and polled button code typically need debouncing: ignoring further changes for a short window (often 10-50 ms) after the first detected transition.</p>',
+  10
+),
+(
+  (SELECT id FROM courses WHERE slug = 'arduino'),
+  'timers-and-non-blocking-timing',
+  'Timers & Non-Blocking Timing',
+  '<h3>The problem with delay()</h3>
+  <p><code>delay()</code> is easy to use but blocks everything -- no other code runs, no pins are read, no other timed events can happen, for the entire duration of the delay. A sketch that needs to blink an LED, read a sensor, and check a button all at their own independent rates cannot do all three with <code>delay()</code> alone.</p>
+
+  <h3>millis() and the standard non-blocking pattern</h3>
+  <p><code>millis()</code> returns the number of milliseconds since the board was last reset, and keeps counting in the background regardless of what <code>loop()</code> is doing. Comparing it against a saved timestamp lets a sketch check "has enough time passed yet?" without ever blocking:</p>
+  <pre><code>unsigned long lastBlinkTime = 0;
+const unsigned long blinkInterval = 500;   // ms
+bool ledState = false;
+
+void loop() {
+    unsigned long now = millis();
+    if (now - lastBlinkTime &gt;= blinkInterval) {
+        lastBlinkTime = now;
+        ledState = !ledState;
+        digitalWrite(LED_PIN, ledState);
+    }
+
+    // ... other code runs every loop() iteration, completely unaffected ...
+}</code></pre>
+  <p>Using subtraction (<code>now - lastBlinkTime</code>) rather than comparing absolute times directly is a deliberate habit: <code>millis()</code> eventually overflows and wraps back to 0 after about 49.7 days, and unsigned subtraction still produces the correct elapsed time across that wraparound, while comparing absolute timestamps directly would not.</p>
+
+  <h3>micros() for finer resolution</h3>
+  <p><code>micros()</code> works the same way but returns microseconds instead of milliseconds, useful for timing that needs finer resolution than a millisecond -- at the cost of overflowing much sooner, after about 70 minutes.</p>
+
+  <h3>State machines: scaling up the same idea</h3>
+  <p>The same "check the time, act, remember the new timestamp" pattern generalizes into a state machine, where a variable tracks which phase of a multi-step timed sequence the program is currently in (e.g. a traffic light cycling through red, green, and yellow) -- the same concept, and often the same state-diagram design process, as the Finite State Machines lesson in the Digital Logic Design course, just implemented in software with <code>millis()</code> in place of a hardware clock signal.</p>',
+  11
+),
+(
+  (SELECT id FROM courses WHERE slug = 'arduino'),
+  'reading-sensors',
+  'Reading Sensors',
+  '<h3>Digital sensors and pull-up/pull-down resistors</h3>
+  <p>A simple digital sensor (a button, a magnetic door switch, many PIR motion sensors) just needs to present a clean HIGH or LOW to a digital input pin. An unconnected ("floating") digital input reads unpredictably, picking up electrical noise -- a pull-up or pull-down resistor guarantees a known default state when the sensor is not actively driving the pin.</p>
+  <pre><code>pinMode(BUTTON_PIN, INPUT_PULLUP);   // most AVR boards have this built in -- no external resistor needed
+
+void loop() {
+    if (digitalRead(BUTTON_PIN) == LOW) {   // note: pressed reads LOW with a pull-up
+        // button is pressed
+    }
+}</code></pre>
+  <p><code>INPUT_PULLUP</code> enables an internal resistor that pulls the pin HIGH by default; wiring a button between the pin and ground then pulls it LOW only while pressed -- which is why the pressed condition reads LOW rather than HIGH with this common wiring style.</p>
+
+  <h3>Analog sensors</h3>
+  <p><code>analogRead()</code> reads a voltage between 0 and the board&prime;s reference voltage (5 V or 3.3 V, depending on the board) and returns a number from 0 to 1023 (a 10-bit reading on most AVR boards).</p>
+  <table class="data-table">
+    <caption>Common analog sensors</caption>
+    <thead><tr><th>Sensor</th><th>What it varies</th><th>Typical wiring</th></tr></thead>
+    <tbody>
+      <tr><td>Potentiometer</td><td>Resistance, mechanically, as a knob turns</td><td>A simple voltage divider between power and ground, with the wiper going to an analog pin</td></tr>
+      <tr><td>LDR (light-dependent resistor)</td><td>Resistance, based on light level</td><td>Voltage divider with a fixed resistor</td></tr>
+      <tr><td>Thermistor</td><td>Resistance, based on temperature</td><td>Voltage divider with a fixed resistor</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Scaling raw readings with map()</h3>
+  <pre><code>int raw = analogRead(A0);                     // 0-1023
+int angle = map(raw, 0, 1023, 0, 180);          // rescale to 0-180 for a servo</code></pre>
+  <p><code>map()</code> linearly rescales a value from one range to another -- useful anywhere a raw sensor reading needs to be converted into a more meaningful unit (degrees, percent, millivolts) before being used.</p>
+
+  <h3>Filtering noisy readings</h3>
+  <p>Raw analog readings are rarely perfectly stable. A simple moving average -- averaging several consecutive readings together -- smooths out noise at the cost of reacting slightly more slowly to real changes:</p>
+  <pre><code>const int numSamples = 10;
+int total = 0;
+for (int i = 0; i &lt; numSamples; i++) {
+    total += analogRead(A0);
+    delay(2);
+}
+int average = total / numSamples;</code></pre>',
+  12
+),
+(
+  (SELECT id FROM courses WHERE slug = 'arduino'),
+  'driving-actuators-with-arduino',
+  'Driving Actuators',
+  '<h3>Why a microcontroller pin usually cannot drive a motor directly</h3>
+  <p>An Arduino pin can typically supply only about 20-40 mA safely, and the whole board&prime;s regulator has limits too -- nowhere near enough for a DC motor, solenoid, or anything but the smallest LED. Anything that draws significant current needs to be switched by a separate device that the microcontroller merely controls, not powers directly.</p>
+
+  <h3>LEDs: current limiting</h3>
+  <pre><code>int ledPin = 9;
+pinMode(ledPin, OUTPUT);
+digitalWrite(ledPin, HIGH);</code></pre>
+  <p>An LED without a series resistor will draw far more current than it or the driving pin can safely handle. A resistor sized with Ohm&prime;s Law (from the Electricity & Electronics course), using the LED&prime;s forward voltage and a safe target current (often 10-20 mA), protects both the LED and the pin.</p>
+
+  <h3>Switching higher-current loads: transistors and MOSFETs</h3>
+  <p>A small signal transistor or MOSFET, driven by a digital pin, can switch a much larger current than the pin itself could -- the pin only needs to supply the small base/gate current (or, for a MOSFET, essentially no steady current at all) needed to turn the switch fully on.</p>
+  <pre><code>digitalWrite(motorControlPin, HIGH);   // turns the transistor/MOSFET fully on,
+                                         // which switches the actual motor current</code></pre>
+  <p>A flyback diode across any motor, relay coil, or solenoid is essential: switching off a suddenly de-energized inductive load (see the Inductors & Inductance lesson in the Electricity & Electronics course) generates a voltage spike that can destroy the switching transistor without one.</p>
+
+  <h3>DC motors and H-bridges</h3>
+  <p>Controlling a DC motor&prime;s direction, not just its on/off state, needs an H-bridge -- a circuit of four switches described in detail in the Robotics course&prime;s Motor Control lesson. Motor driver modules and ICs (like the L298N or DRV8833) package an H-bridge behind a simple two- or three-pin interface that <code>digitalWrite()</code> and <code>analogWrite()</code> can drive directly.</p>
+
+  <h3>Servo motors</h3>
+  <p>As covered in the PWM lesson, hobby servos are controlled with the Servo library rather than plain PWM duty cycle:</p>
+  <pre><code>#include &lt;Servo.h&gt;
+Servo armServo;
+
+void setup() {
+    armServo.attach(9);
+}
+
+void loop() {
+    armServo.write(45);   // move to 45 degrees
+}</code></pre>
+
+  <h3>Relays</h3>
+  <p>A relay uses a small electromagnet to physically open or close a separate, electrically isolated switch contact -- useful for controlling AC mains-powered devices (lamps, appliances) from a low-voltage microcontroller pin, since the microcontroller side never directly touches the higher, more dangerous voltage.</p>',
+  13
+),
+(
+  (SELECT id FROM courses WHERE slug = 'arduino'),
+  'eeprom-and-persistent-storage',
+  'EEPROM & Persistent Storage',
+  '<h3>Why EEPROM</h3>
+  <p>SRAM (where regular variables live) loses its contents the instant power is removed. EEPROM (Electrically Erasable Programmable Read-Only Memory) is a small block of memory that keeps its contents even with no power at all -- useful for settings, calibration values, or counters that need to survive a reset or power loss.</p>
+
+  <h3>Reading and writing EEPROM</h3>
+  <pre><code>#include &lt;EEPROM.h&gt;
+
+void setup() {
+    EEPROM.write(0, 42);           // write the byte 42 to EEPROM address 0
+    byte value = EEPROM.read(0);   // read it back
+}</code></pre>
+  <p>For anything larger than a single byte -- an <code>int</code>, a <code>float</code>, or a whole struct -- the library also provides <code>EEPROM.put()</code> and <code>EEPROM.get()</code>, which handle the multi-byte layout automatically.</p>
+
+  <h3>EEPROM has a limited lifespan</h3>
+  <p>A typical AVR EEPROM cell is rated for roughly 100,000 write cycles before it becomes unreliable -- reads are unlimited, but repeatedly writing the same address (for example, every single time through <code>loop()</code>) can wear it out surprisingly quickly. <code>EEPROM.update()</code> writes a value only if it is actually different from what is already stored, avoiding wasted write cycles when the value has not changed.</p>
+
+  <h3>Other options for larger or more frequent storage</h3>
+  <table class="data-table">
+    <caption>Storage options beyond built-in EEPROM</caption>
+    <thead><tr><th>Option</th><th>When to reach for it</th></tr></thead>
+    <tbody>
+      <tr><td>SD card module</td><td>Logging large amounts of data, or data that changes frequently</td></tr>
+      <tr><td>External I2C/SPI EEPROM or FRAM chip</td><td>Need more storage than the built-in EEPROM, or (FRAM) far more write cycles</td></tr>
+      <tr><td>Flash-based storage (e.g. via a filesystem library)</td><td>Boards without a traditional EEPROM peripheral</td></tr>
+    </tbody>
+  </table>',
+  14
+),
+(
+  (SELECT id FROM courses WHERE slug = 'arduino'),
+  'power-management-and-sleep-modes',
+  'Power Management & Sleep Modes',
+  '<h3>Why power matters</h3>
+  <p>A board plugged into a wall adapter can ignore power consumption almost entirely. A battery-powered project cannot: a sensor node that draws a few milliamps continuously might run for days, while the same node put to sleep between readings and waking only briefly can often run for months or years on the same battery.</p>
+
+  <h3>Where the power goes</h3>
+  <table class="data-table">
+    <caption>Typical current draw by activity (illustrative, board- and code-dependent)</caption>
+    <thead><tr><th>State</th><th>Typical current</th></tr></thead>
+    <tbody>
+      <tr><td>Actively running, radio/peripherals on</td><td>Tens of milliamps</td></tr>
+      <tr><td>Actively running, idle CPU</td><td>Several milliamps to tens of milliamps</td></tr>
+      <tr><td>Deep sleep mode</td><td>Microamps or less, depending on the board</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Sleep modes</h3>
+  <p>Most microcontrollers support several sleep modes that trade wake-up latency and which peripherals stay active against how little power is drawn. On AVR boards, the <code>avr/sleep.h</code> header provides several modes, from a light "idle" sleep (CPU stopped, timers and interrupts still running) down to "power down" (almost everything stopped, woken only by specific external events like a pin-change interrupt or the watchdog timer).</p>
+  <pre><code>#include &lt;avr/sleep.h&gt;
+
+void enterSleep() {
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+    sleep_enable();
+    sleep_mode();     // execution pauses here until an interrupt wakes the board
+    sleep_disable();
+}</code></pre>
+
+  <h3>The watchdog timer</h3>
+  <p>A watchdog timer can do two different jobs: waking a sleeping board on a schedule (since deep sleep otherwise stops even the normal <code>millis()</code> timer), and acting as a safety net that resets the board automatically if the main program ever hangs and fails to "check in" (reset the watchdog) within an expected interval.</p>
+
+  <h3>Practical low-power habits</h3>
+  <ul>
+    <li>Turn off peripherals (sensors, radios, displays) when they are not actively needed, rather than leaving them powered continuously.</li>
+    <li>Sleep between readings instead of polling in a tight loop.</li>
+    <li>Reduce clock speed if the application does not need full processing speed, since power draw generally scales with clock frequency.</li>
+    <li>Choose components (sensors, voltage regulators) rated for low quiescent current when battery life matters.</li>
+  </ul>',
+  15
+),
+(
+  (SELECT id FROM courses WHERE slug = 'arduino'),
+  'debugging-and-best-practices',
+  'Debugging & Best Practices',
+  '<h3>Serial.print() as a debugging tool</h3>
+  <pre><code>void setup() {
+    Serial.begin(9600);
+}
+
+void loop() {
+    int reading = analogRead(A0);
+    Serial.print("Sensor reading: ");
+    Serial.println(reading);
+    delay(500);
+}</code></pre>
+  <p>Without a debugger attached (which most Arduino setups do not have), printing values to the Serial Monitor is the primary way to see what a sketch is actually doing -- confirm a variable&prime;s value, confirm a function was actually called, or confirm the timing between two events.</p>
+
+  <h3>Common Arduino bugs</h3>
+  <table class="data-table">
+    <caption>Frequent beginner mistakes</caption>
+    <thead><tr><th>Symptom</th><th>Likely cause</th></tr></thead>
+    <tbody>
+      <tr><td>Whole sketch appears frozen or unresponsive</td><td>A blocking <code>delay()</code>, or a <code>while</code> loop waiting on a condition that never becomes true</td></tr>
+      <tr><td>A variable shared with an interrupt seems to update itself randomly, or a flag set inside an interrupt never seems to be noticed</td><td>The variable was not declared <code>volatile</code></td></tr>
+      <tr><td>Sketch runs fine briefly, then crashes or behaves erratically</td><td>Running out of SRAM, often from excessive <code>String</code> concatenation</td></tr>
+      <tr><td>Digital input reads randomly HIGH and LOW with nothing connected</td><td>A floating input pin with no pull-up/pull-down resistor</td></tr>
+      <tr><td>analogWrite() has no visible effect</td><td>Using a pin that does not support PWM (missing the <code>~</code> marking)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Checking memory usage</h3>
+  <p>The Arduino IDE reports program storage (Flash) and dynamic memory (SRAM) usage after every compile. An Uno has only 2 KB of SRAM total, shared between global variables, the call stack, and anything the <code>String</code> class or other dynamic allocation needs -- a sketch that is close to that limit is at real risk of unpredictable crashes as available memory shrinks further at runtime.</p>
+
+  <h3>Code organization habits that scale</h3>
+  <ul>
+    <li>Give pins and constants meaningful names with <code>const int</code>, rather than scattering unexplained numbers ("magic numbers") through the code.</li>
+    <li>Break repeated logic out into functions instead of copy-pasting the same block repeatedly.</li>
+    <li>Keep <code>loop()</code> non-blocking (see the Timers & Non-Blocking Timing lesson) so the sketch stays responsive as more features are added.</li>
+    <li>Comment the <em>why</em> behind a non-obvious choice, not the <em>what</em> a line already makes clear from its own code.</li>
+  </ul>',
+  16
 )
 ON DUPLICATE KEY UPDATE
   title = VALUES(title),
