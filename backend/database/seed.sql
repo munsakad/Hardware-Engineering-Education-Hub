@@ -3963,7 +3963,8 @@ INSERT INTO lessons (course_id, slug, title, content, sort_order) VALUES
   (SELECT id FROM courses WHERE slug = 'vhdl'),
   'vhdl-entity-architecture',
   'Entities & Architectures',
-  '<h3>Entity: the interface</h3>
+  '<p><span class="tag">Beginner</span></p>
+  <h3>Entity: the interface</h3>
   <p>An <code>entity</code> declares a component''s name and its ports (inputs and outputs), similar to a Verilog module''s port list.</p>
   <pre><code>entity and_gate is
     port (
@@ -3983,9 +3984,75 @@ end architecture behavior;</code></pre>
 ),
 (
   (SELECT id FROM courses WHERE slug = 'vhdl'),
+  'vhdl-data-types',
+  'VHDL Data Types',
+  '<p><span class="tag">Beginner</span></p>
+  <h3>Why VHDL types matter more than in Verilog</h3>
+  <p>VHDL is strongly typed: unlike Verilog, values of different types cannot be mixed in an expression without an explicit conversion, and the compiler enforces this strictly. This catches more mistakes at compile time, at the cost of more boilerplate than Verilog needs for the same circuit.</p>
+
+  <h3>std_logic and std_logic_vector</h3>
+  <p>The IEEE <code>std_logic</code> type represents a single bit, but with more possible values than just 0 and 1 -- useful for simulating real hardware behavior such as an undriven or conflicting signal.</p>
+  <table class="data-table">
+    <caption>Common std_logic values</caption>
+    <thead><tr><th>Value</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>''0'', ''1''</td><td>Logic low / logic high</td></tr>
+      <tr><td>''Z''</td><td>High impedance (e.g. an undriven tri-state output)</td></tr>
+      <tr><td>''X''</td><td>Unknown (e.g. two drivers fighting over the same signal)</td></tr>
+      <tr><td>''U''</td><td>Uninitialized (a signal&prime;s value before simulation gives it one)</td></tr>
+      <tr><td>''-''</td><td>Don&prime;t care</td></tr>
+    </tbody>
+  </table>
+  <pre><code>library ieee;
+use ieee.std_logic_1164.all;
+
+entity example is
+    port (
+        a : in  std_logic;
+        b : in  std_logic_vector(3 downto 0);
+        y : out std_logic
+    );
+end entity example;</code></pre>
+  <p><code>std_logic_vector</code> is a bus of <code>std_logic</code> bits -- <code>std_logic_vector(3 downto 0)</code> is a 4-bit bus, with bit 3 as the most significant bit and bit 0 as the least significant, matching the order most engineers read a binary number in.</p>
+
+  <h3>The two library packages nearly every VHDL file needs</h3>
+  <pre><code>library ieee;
+use ieee.std_logic_1164.all;   -- defines std_logic and std_logic_vector
+use ieee.numeric_std.all;      -- defines signed/unsigned and arithmetic on them</code></pre>
+
+  <h3>signed and unsigned: enabling arithmetic</h3>
+  <p><code>std_logic_vector</code> alone has no defined arithmetic -- VHDL will not let you add two <code>std_logic_vector</code> signals directly. The <code>unsigned</code> and <code>signed</code> types (from <code>numeric_std</code>) are built on the same bits but carry arithmetic meaning, so <code>+</code> and <code>-</code> work on them directly.</p>
+  <pre><code>signal a, b, sum : unsigned(3 downto 0);
+sum &lt;= a + b;   -- valid: unsigned addition</code></pre>
+  <p>Converting between the two is explicit and common:</p>
+  <pre><code>signal data  : std_logic_vector(7 downto 0);
+signal value : unsigned(7 downto 0);
+
+value &lt;= unsigned(data);               -- std_logic_vector -&gt; unsigned
+data  &lt;= std_logic_vector(value);       -- unsigned -&gt; std_logic_vector</code></pre>
+
+  <h3>integer and other scalar types</h3>
+  <p><code>integer</code> is useful for things like loop counters and array indices, but is not synthesizable as an arbitrary-width hardware bus the way <code>std_logic_vector</code> is -- it is a simulation and control-flow type, not a signal type meant to model a physical bus of a specific width.</p>
+
+  <h3>Constants and generics</h3>
+  <pre><code>constant WIDTH : integer := 8;
+
+entity adder is
+    generic (WIDTH : integer := 8);
+    port (
+        a, b : in  std_logic_vector(WIDTH-1 downto 0);
+        sum  : out std_logic_vector(WIDTH-1 downto 0)
+    );
+end entity adder;</code></pre>
+  <p>A <code>generic</code> is VHDL&prime;s equivalent of a Verilog module parameter -- a compile-time value that lets the same entity be instantiated at different widths without rewriting it.</p>',
+  2
+),
+(
+  (SELECT id FROM courses WHERE slug = 'vhdl'),
   'vhdl-signals-processes',
   'Signals & Processes',
-  '<h3>Signals</h3>
+  '<p><span class="tag">Beginner</span></p>
+  <h3>Signals</h3>
   <p>A <code>signal</code> represents a wire or piece of state inside an architecture, declared with a type such as <code>std_logic</code> (a single bit) or <code>std_logic_vector</code> (a bus of bits).</p>
   <h3>Processes</h3>
   <p>A <code>process</code> block groups sequential statements that execute whenever something in its sensitivity list changes -- most commonly a clock.</p>
@@ -4009,7 +4076,793 @@ end architecture behavior;</code></pre>
       <tr><td><code>variable</code></td><td>Updated immediately, in program order</td><td>Local to the process it is declared in</td></tr>
     </tbody>
   </table>',
-  2
+  3
+),
+(
+  (SELECT id FROM courses WHERE slug = 'vhdl'),
+  'vhdl-half-full-adders',
+  'Half & Full Adders in VHDL',
+  '<p><span class="tag">Beginner</span></p>
+  <h3>Half adder: concurrent (dataflow) style</h3>
+  <pre><code>library ieee;
+use ieee.std_logic_1164.all;
+
+entity half_adder is
+    port (
+        a, b      : in  std_logic;
+        sum, cout : out std_logic
+    );
+end entity half_adder;
+
+architecture dataflow of half_adder is
+begin
+    sum  &lt;= a xor b;
+    cout &lt;= a and b;
+end architecture dataflow;</code></pre>
+
+  <h3>Full adder: concurrent style</h3>
+  <pre><code>entity full_adder is
+    port (
+        a, b, cin : in  std_logic;
+        sum, cout : out std_logic
+    );
+end entity full_adder;
+
+architecture dataflow of full_adder is
+begin
+    sum  &lt;= a xor b xor cin;
+    cout &lt;= (a and b) or (a and cin) or (b and cin);
+end architecture dataflow;</code></pre>
+
+  <h3>Full adder: structural style, built from two half adders</h3>
+  <p>Just like Verilog, VHDL lets an architecture be built purely by wiring up instances of other entities -- exactly matching the DLD lesson describing a full adder built from two half adders.</p>
+  <pre><code>architecture structural of full_adder is
+    signal s1, c1, c2 : std_logic;
+begin
+    ha1 : entity work.half_adder
+        port map (a =&gt; a, b =&gt; b, sum =&gt; s1, cout =&gt; c1);
+
+    ha2 : entity work.half_adder
+        port map (a =&gt; s1, b =&gt; cin, sum =&gt; sum, cout =&gt; c2);
+
+    cout &lt;= c1 or c2;
+end architecture structural;</code></pre>
+  <p><code>port map (port_name =&gt; signal, ...)</code> is VHDL&prime;s named port connection -- the VHDL equivalent of the <code>.port_name(signal)</code> syntax from the Verilog course, connecting each entity port to a specific signal regardless of declaration order.</p>',
+  4
+),
+(
+  (SELECT id FROM courses WHERE slug = 'vhdl'),
+  'vhdl-decoders-encoders',
+  'Decoders & Encoders in VHDL',
+  '<p><span class="tag">Beginner</span></p>
+  <h3>2-to-4 decoder: concurrent style</h3>
+  <pre><code>entity decoder_2to4 is
+    port (
+        a : in  std_logic_vector(1 downto 0);
+        d : out std_logic_vector(3 downto 0)
+    );
+end entity decoder_2to4;
+
+architecture dataflow of decoder_2to4 is
+begin
+    d(0) &lt;= (not a(1)) and (not a(0));
+    d(1) &lt;= (not a(1)) and a(0);
+    d(2) &lt;= a(1) and (not a(0));
+    d(3) &lt;= a(1) and a(0);
+end architecture dataflow;</code></pre>
+
+  <h3>A cleaner decoder using a process and a case statement</h3>
+  <pre><code>architecture behavioral of decoder_2to4 is
+begin
+    process(a)
+    begin
+        case a is
+            when "00"   =&gt; d &lt;= "0001";
+            when "01"   =&gt; d &lt;= "0010";
+            when "10"   =&gt; d &lt;= "0100";
+            when "11"   =&gt; d &lt;= "1000";
+            when others =&gt; d &lt;= "0000";
+        end case;
+    end process;
+end architecture behavioral;</code></pre>
+  <p>A process with every signal it reads listed in its sensitivity list (here, just <code>a</code>) is VHDL&prime;s way of describing combinational logic with a <code>case</code> or <code>if</code> statement, matching the role of Verilog&prime;s <code>always @(*)</code> block. The <code>when others</code> branch is required by VHDL whenever a <code>case</code> does not explicitly cover every possible value of its type -- for a 2-bit <code>std_logic_vector</code>, that technically includes values like <code>"ZZ"</code> or <code>"XX"</code>, not just the four binary combinations.</p>
+
+  <h3>4-to-2 encoder</h3>
+  <pre><code>entity encoder_4to2 is
+    port (
+        d : in  std_logic_vector(3 downto 0);
+        a : out std_logic_vector(1 downto 0)
+    );
+end entity encoder_4to2;
+
+architecture behavioral of encoder_4to2 is
+begin
+    process(d)
+    begin
+        case d is
+            when "0001" =&gt; a &lt;= "00";
+            when "0010" =&gt; a &lt;= "01";
+            when "0100" =&gt; a &lt;= "10";
+            when "1000" =&gt; a &lt;= "11";
+            when others =&gt; a &lt;= "00";
+        end case;
+    end process;
+end architecture behavioral;</code></pre>
+  <p>As with the Verilog version of this circuit, the <code>when others</code> branch matters: without it, an unexpected input pattern would leave <code>a</code> holding its previous value rather than a defined one, which can synthesize into an unintended latch.</p>',
+  5
+),
+(
+  (SELECT id FROM courses WHERE slug = 'vhdl'),
+  'vhdl-comparators-parity',
+  'Comparators & Parity Circuits in VHDL',
+  '<p><span class="tag">Beginner</span></p>
+  <h3>Multi-bit comparators</h3>
+  <pre><code>library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity comparator is
+    generic (WIDTH : integer := 4);
+    port (
+        a, b       : in  std_logic_vector(WIDTH-1 downto 0);
+        gt, eq, lt : out std_logic
+    );
+end entity comparator;
+
+architecture dataflow of comparator is
+begin
+    gt &lt;= ''1'' when unsigned(a) &gt; unsigned(b) else ''0'';
+    eq &lt;= ''1'' when unsigned(a) = unsigned(b) else ''0'';
+    lt &lt;= ''1'' when unsigned(a) &lt; unsigned(b) else ''0'';
+end architecture dataflow;</code></pre>
+  <p>The <code>when ... else</code> construct is a concurrent conditional assignment -- VHDL&prime;s way of writing a one-line combinational condition without needing a full <code>process</code> block. Comparing as <code>unsigned</code> rather than directly on <code>std_logic_vector</code> is what gives <code>&gt;</code> and <code>&lt;</code> their expected numeric meaning rather than a simple bit-pattern comparison.</p>
+
+  <h3>Parity generator and checker</h3>
+  <p>VHDL does not have a built-in reduction-XOR operator the way Verilog does, but a small loop with a variable produces the same result.</p>
+  <pre><code>entity parity_gen is
+    generic (WIDTH : integer := 8);
+    port (
+        data            : in  std_logic_vector(WIDTH-1 downto 0);
+        even_parity_bit : out std_logic
+    );
+end entity parity_gen;
+
+architecture behavioral of parity_gen is
+begin
+    process(data)
+        variable p : std_logic;
+    begin
+        p := ''0'';
+        for i in data''range loop
+            p := p xor data(i);
+        end loop;
+        even_parity_bit &lt;= p;
+    end process;
+end architecture behavioral;</code></pre>
+  <p>A <code>variable</code> (declared inside the process, updated immediately in program order) is the natural tool here, since each loop iteration needs to see the previous iteration&prime;s updated value right away -- unlike a <code>signal</code>, whose new value would not be visible until the next time the process runs.</p>',
+  6
+),
+(
+  (SELECT id FROM courses WHERE slug = 'vhdl'),
+  'vhdl-multiplexers-demultiplexers',
+  'Multiplexers & Demultiplexers in VHDL',
+  '<p><span class="tag">Intermediate</span></p>
+  <h3>2-to-1 multiplexer: conditional signal assignment</h3>
+  <pre><code>entity mux2to1 is
+    port (
+        sel  : in  std_logic;
+        a, b : in  std_logic;
+        y    : out std_logic
+    );
+end entity mux2to1;
+
+architecture dataflow of mux2to1 is
+begin
+    y &lt;= b when sel = ''1'' else a;
+end architecture dataflow;</code></pre>
+
+  <h3>4-to-1 multiplexer: selected signal assignment</h3>
+  <pre><code>entity mux4to1 is
+    port (
+        sel : in  std_logic_vector(1 downto 0);
+        d   : in  std_logic_vector(3 downto 0);
+        y   : out std_logic
+    );
+end entity mux4to1;
+
+architecture dataflow of mux4to1 is
+begin
+    with sel select
+        y &lt;= d(0) when "00",
+             d(1) when "01",
+             d(2) when "10",
+             d(3) when "11",
+             ''0'' when others;
+end architecture dataflow;</code></pre>
+  <p><code>with ... select</code> is VHDL&prime;s selected signal assignment -- functionally similar to a <code>case</code> statement inside a process, but written as a single concurrent statement instead. As with any <code>case</code>-like construct over a <code>std_logic_vector</code>, a final <code>when others</code> branch is required to cover every possible value of the selector, not just the two "real" bit patterns.</p>
+
+  <h3>1-to-4 demultiplexer</h3>
+  <pre><code>entity demux1to4 is
+    port (
+        sel : in  std_logic_vector(1 downto 0);
+        d   : in  std_logic;
+        y   : out std_logic_vector(3 downto 0)
+    );
+end entity demux1to4;
+
+architecture behavioral of demux1to4 is
+begin
+    process(sel, d)
+    begin
+        y &lt;= "0000";
+        case sel is
+            when "00"   =&gt; y(0) &lt;= d;
+            when "01"   =&gt; y(1) &lt;= d;
+            when "10"   =&gt; y(2) &lt;= d;
+            when "11"   =&gt; y(3) &lt;= d;
+            when others =&gt; null;
+        end case;
+    end process;
+end architecture behavioral;</code></pre>
+  <p>Assigning <code>y &lt;= "0000"</code> first, then overriding a single bit inside the <code>case</code>, is the same idiom used in the Verilog course&prime;s demux example: it guarantees every output bit has a defined value on every path through the process, avoiding an inferred latch on the non-selected bits. <code>null</code> is VHDL&prime;s explicit "do nothing" statement, needed here because the <code>when others</code> branch has no work left to do once the default assignment above has already run.</p>',
+  7
+),
+(
+  (SELECT id FROM courses WHERE slug = 'vhdl'),
+  'vhdl-ripple-carry-adder-alu',
+  'Ripple-Carry Adders & a Simple ALU in VHDL',
+  '<p><span class="tag">Intermediate</span></p>
+  <h3>Ripple-carry adder from a generate statement</h3>
+  <pre><code>library ieee;
+use ieee.std_logic_1164.all;
+
+entity ripple_adder is
+    generic (WIDTH : integer := 4);
+    port (
+        a, b : in  std_logic_vector(WIDTH-1 downto 0);
+        cin  : in  std_logic;
+        sum  : out std_logic_vector(WIDTH-1 downto 0);
+        cout : out std_logic
+    );
+end entity ripple_adder;
+
+architecture structural of ripple_adder is
+    signal carry : std_logic_vector(WIDTH downto 0);
+begin
+    carry(0) &lt;= cin;
+    cout &lt;= carry(WIDTH);
+
+    fa_stage: for i in 0 to WIDTH-1 generate
+        fa : entity work.full_adder
+            port map (
+                a    =&gt; a(i),
+                b    =&gt; b(i),
+                cin  =&gt; carry(i),
+                sum  =&gt; sum(i),
+                cout =&gt; carry(i+1)
+            );
+    end generate fa_stage;
+end architecture structural;</code></pre>
+  <p>A <code>for ... generate</code> statement is VHDL&prime;s equivalent of Verilog&prime;s <code>generate for</code> loop with a <code>genvar</code> -- it creates <code>WIDTH</code> copies of the <code>full_adder</code> instance at compile time, each wired to a different bit of <code>a</code>, <code>b</code>, and the carry chain, exactly matching the ripple-carry adder from the Digital Logic Design course.</p>
+
+  <h3>A mode-controlled adder/subtractor</h3>
+  <pre><code>use ieee.numeric_std.all;
+
+entity addsub is
+    generic (WIDTH : integer := 4);
+    port (
+        a, b   : in  std_logic_vector(WIDTH-1 downto 0);
+        mode   : in  std_logic;   -- ''0'' = add, ''1'' = subtract (a - b)
+        result : out std_logic_vector(WIDTH-1 downto 0);
+        cout   : out std_logic
+    );
+end entity addsub;
+
+architecture structural of addsub is
+    signal b_xored : std_logic_vector(WIDTH-1 downto 0);
+begin
+    b_xored &lt;= b xor (WIDTH-1 downto 0 =&gt; mode);
+
+    core : entity work.ripple_adder
+        generic map (WIDTH =&gt; WIDTH)
+        port map (a =&gt; a, b =&gt; b_xored, cin =&gt; mode, sum =&gt; result, cout =&gt; cout);
+end architecture structural;</code></pre>
+  <p><code>(WIDTH-1 downto 0 =&gt; mode)</code> is a VHDL aggregate: it builds a <code>WIDTH</code>-bit value where every bit equals <code>mode</code> -- the VHDL equivalent of Verilog&prime;s <code>{WIDTH{mode}}</code> replication operator. XORing <code>b</code> against all 0s leaves it unchanged (addition); XORing against all 1s complements every bit, and combined with <code>cin = mode = ''1''</code> adding 1, this produces the two&prime;s complement of <code>b</code> -- the same adder/subtractor trick from the Digital Logic Design course.</p>',
+  8
+),
+(
+  (SELECT id FROM courses WHERE slug = 'vhdl'),
+  'vhdl-latches-flip-flop-types',
+  'Latches & Flip-Flop Types in VHDL',
+  '<p><span class="tag">Intermediate</span></p>
+  <h3>Why you rarely write a latch on purpose</h3>
+  <p>Just as in Verilog, an incompletely specified combinational process in VHDL -- one that does not assign an output on every possible path -- infers a latch rather than combinational logic, which most synthesis tools flag as a likely bug. Real designs almost always use the clocked, edge-triggered styles below instead.</p>
+
+  <h3>D flip-flop</h3>
+  <pre><code>library ieee;
+use ieee.std_logic_1164.all;
+
+entity d_flip_flop is
+    port (
+        clk, reset : in  std_logic;
+        d          : in  std_logic;
+        q          : out std_logic
+    );
+end entity d_flip_flop;
+
+architecture behavioral of d_flip_flop is
+begin
+    process(clk, reset)
+    begin
+        if reset = ''1'' then
+            q &lt;= ''0'';
+        elsif rising_edge(clk) then
+            q &lt;= d;
+        end if;
+    end process;
+end architecture behavioral;</code></pre>
+  <p><code>rising_edge(clk)</code> is the standard, preferred way to detect a clock edge in modern VHDL -- clearer than the older <code>clk''event and clk = ''1''</code> idiom still seen in legacy code, though both mean the same thing.</p>
+
+  <h3>JK flip-flop</h3>
+  <pre><code>entity jk_flip_flop is
+    port (
+        clk, reset : in  std_logic;
+        j, k       : in  std_logic;
+        q          : out std_logic
+    );
+end entity jk_flip_flop;
+
+architecture behavioral of jk_flip_flop is
+    signal q_internal : std_logic := ''0'';
+begin
+    process(clk, reset)
+    begin
+        if reset = ''1'' then
+            q_internal &lt;= ''0'';
+        elsif rising_edge(clk) then
+            case (j &amp; k) is
+                when "00"   =&gt; q_internal &lt;= q_internal;       -- hold
+                when "01"   =&gt; q_internal &lt;= ''0'';               -- reset
+                when "10"   =&gt; q_internal &lt;= ''1'';               -- set
+                when "11"   =&gt; q_internal &lt;= not q_internal;     -- toggle
+                when others =&gt; q_internal &lt;= ''X'';
+            end case;
+        end if;
+    end process;
+
+    q &lt;= q_internal;
+end architecture behavioral;</code></pre>
+  <p>An internal signal (<code>q_internal</code>) is used here because an entity&prime;s <code>out</code> port cannot always be read back inside its own architecture -- a common pattern whenever a flip-flop&prime;s current output needs to feed back into its own next-state logic, as the toggle case does here. <code>j &amp; k</code> concatenates the two single-bit inputs into a 2-bit vector so they can be matched together in one <code>case</code> statement.</p>
+
+  <h3>T flip-flop</h3>
+  <pre><code>entity t_flip_flop is
+    port (
+        clk, reset : in  std_logic;
+        t          : in  std_logic;
+        q          : out std_logic
+    );
+end entity t_flip_flop;
+
+architecture behavioral of t_flip_flop is
+    signal q_internal : std_logic := ''0'';
+begin
+    process(clk, reset)
+    begin
+        if reset = ''1'' then
+            q_internal &lt;= ''0'';
+        elsif rising_edge(clk) then
+            if t = ''1'' then
+                q_internal &lt;= not q_internal;
+            end if;
+        end if;
+    end process;
+
+    q &lt;= q_internal;
+end architecture behavioral;</code></pre>
+  <p>Notice all three flip-flops share the same skeleton: a process sensitive to <code>clk</code> and <code>reset</code>, an asynchronous reset branch, and an <code>elsif rising_edge(clk)</code> branch containing the actual next-state logic -- exactly matching the characteristic-equation table from the Digital Logic Design course, just written in VHDL&prime;s process style instead of Verilog&prime;s <code>always</code> block.</p>',
+  9
+),
+(
+  (SELECT id FROM courses WHERE slug = 'vhdl'),
+  'vhdl-registers-shift-registers',
+  'Registers & Shift Registers in VHDL',
+  '<p><span class="tag">Intermediate</span></p>
+  <h3>A parallel-load register</h3>
+  <pre><code>library ieee;
+use ieee.std_logic_1164.all;
+
+entity register_n is
+    generic (WIDTH : integer := 8);
+    port (
+        clk, load : in  std_logic;
+        d         : in  std_logic_vector(WIDTH-1 downto 0);
+        q         : out std_logic_vector(WIDTH-1 downto 0)
+    );
+end entity register_n;
+
+architecture behavioral of register_n is
+begin
+    process(clk)
+    begin
+        if rising_edge(clk) then
+            if load = ''1'' then
+                q &lt;= d;
+            end if;
+        end if;
+    end process;
+end architecture behavioral;</code></pre>
+
+  <h3>SIPO shift register (serial-in, parallel-out)</h3>
+  <pre><code>entity sipo is
+    generic (WIDTH : integer := 8);
+    port (
+        clk       : in  std_logic;
+        serial_in : in  std_logic;
+        q         : out std_logic_vector(WIDTH-1 downto 0)
+    );
+end entity sipo;
+
+architecture behavioral of sipo is
+    signal shift_reg : std_logic_vector(WIDTH-1 downto 0) := (others =&gt; ''0'');
+begin
+    process(clk)
+    begin
+        if rising_edge(clk) then
+            shift_reg &lt;= shift_reg(WIDTH-2 downto 0) &amp; serial_in;
+        end if;
+    end process;
+
+    q &lt;= shift_reg;
+end architecture behavioral;</code></pre>
+  <p>The concatenation <code>shift_reg(WIDTH-2 downto 0) &amp; serial_in</code> builds the new shifted value in one expression -- the VHDL equivalent of Verilog&prime;s <code>{q[WIDTH-2:0], serial_in}</code>.</p>
+
+  <h3>Universal shift register</h3>
+  <pre><code>entity universal_shift_reg is
+    generic (WIDTH : integer := 8);
+    port (
+        clk          : in  std_logic;
+        mode         : in  std_logic_vector(1 downto 0);  -- 00=hold,01=shift right,10=shift left,11=load
+        sin_r, sin_l : in  std_logic;
+        d            : in  std_logic_vector(WIDTH-1 downto 0);
+        q            : out std_logic_vector(WIDTH-1 downto 0)
+    );
+end entity universal_shift_reg;
+
+architecture behavioral of universal_shift_reg is
+    signal shift_reg : std_logic_vector(WIDTH-1 downto 0) := (others =&gt; ''0'');
+begin
+    process(clk)
+    begin
+        if rising_edge(clk) then
+            case mode is
+                when "00"   =&gt; shift_reg &lt;= shift_reg;
+                when "01"   =&gt; shift_reg &lt;= sin_r &amp; shift_reg(WIDTH-1 downto 1);
+                when "10"   =&gt; shift_reg &lt;= shift_reg(WIDTH-2 downto 0) &amp; sin_l;
+                when "11"   =&gt; shift_reg &lt;= d;
+                when others =&gt; shift_reg &lt;= (others =&gt; ''X'');
+            end case;
+        end if;
+    end process;
+
+    q &lt;= shift_reg;
+end architecture behavioral;</code></pre>',
+  10
+),
+(
+  (SELECT id FROM courses WHERE slug = 'vhdl'),
+  'vhdl-counters',
+  'Counters in VHDL',
+  '<p><span class="tag">Intermediate</span></p>
+  <h3>Free-running binary up counter</h3>
+  <pre><code>library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity up_counter is
+    generic (WIDTH : integer := 4);
+    port (
+        clk, reset : in  std_logic;
+        count      : out std_logic_vector(WIDTH-1 downto 0)
+    );
+end entity up_counter;
+
+architecture behavioral of up_counter is
+    signal count_internal : unsigned(WIDTH-1 downto 0) := (others =&gt; ''0'');
+begin
+    process(clk, reset)
+    begin
+        if reset = ''1'' then
+            count_internal &lt;= (others =&gt; ''0'');
+        elsif rising_edge(clk) then
+            count_internal &lt;= count_internal + 1;
+        end if;
+    end process;
+
+    count &lt;= std_logic_vector(count_internal);
+end architecture behavioral;</code></pre>
+  <p>Counting is done on an internal <code>unsigned</code> signal (since <code>+</code> is only defined for numeric types, not directly on <code>std_logic_vector</code>), then converted back to <code>std_logic_vector</code> for the output port -- the same conversion pattern introduced in the VHDL Data Types lesson.</p>
+
+  <h3>Up/down counter</h3>
+  <pre><code>entity updown_counter is
+    generic (WIDTH : integer := 4);
+    port (
+        clk, reset : in  std_logic;
+        up_down    : in  std_logic;   -- ''1'' = up, ''0'' = down
+        count      : out std_logic_vector(WIDTH-1 downto 0)
+    );
+end entity updown_counter;
+
+architecture behavioral of updown_counter is
+    signal count_internal : unsigned(WIDTH-1 downto 0) := (others =&gt; ''0'');
+begin
+    process(clk, reset)
+    begin
+        if reset = ''1'' then
+            count_internal &lt;= (others =&gt; ''0'');
+        elsif rising_edge(clk) then
+            if up_down = ''1'' then
+                count_internal &lt;= count_internal + 1;
+            else
+                count_internal &lt;= count_internal - 1;
+            end if;
+        end if;
+    end process;
+
+    count &lt;= std_logic_vector(count_internal);
+end architecture behavioral;</code></pre>
+
+  <h3>Mod-N (e.g. BCD/decade) counter</h3>
+  <pre><code>entity mod_n_counter is
+    generic (WIDTH : integer := 4; N : integer := 10);
+    port (
+        clk, reset : in  std_logic;
+        count      : out std_logic_vector(WIDTH-1 downto 0)
+    );
+end entity mod_n_counter;
+
+architecture behavioral of mod_n_counter is
+    signal count_internal : unsigned(WIDTH-1 downto 0) := (others =&gt; ''0'');
+begin
+    process(clk, reset)
+    begin
+        if reset = ''1'' then
+            count_internal &lt;= (others =&gt; ''0'');
+        elsif rising_edge(clk) then
+            if count_internal = N - 1 then
+                count_internal &lt;= (others =&gt; ''0'');
+            else
+                count_internal &lt;= count_internal + 1;
+            end if;
+        end if;
+    end process;
+
+    count &lt;= std_logic_vector(count_internal);
+end architecture behavioral;</code></pre>
+  <p>Setting the <code>N</code> generic to 10 gives the same BCD decade counter from the Digital Logic Design course: it counts 0 through 9 and then wraps back to 0.</p>',
+  11
+),
+(
+  (SELECT id FROM courses WHERE slug = 'vhdl'),
+  'vhdl-carry-lookahead-generate',
+  'Carry-Lookahead Adders & Generate Statements in VHDL',
+  '<p><span class="tag">Advanced</span></p>
+  <h3>Computing carries in parallel</h3>
+  <pre><code>library ieee;
+use ieee.std_logic_1164.all;
+
+entity cla_adder is
+    generic (WIDTH : integer := 4);
+    port (
+        a, b : in  std_logic_vector(WIDTH-1 downto 0);
+        cin  : in  std_logic;
+        sum  : out std_logic_vector(WIDTH-1 downto 0);
+        cout : out std_logic
+    );
+end entity cla_adder;
+
+architecture structural of cla_adder is
+    signal p, g : std_logic_vector(WIDTH-1 downto 0);
+    signal c    : std_logic_vector(WIDTH downto 0);
+begin
+    p &lt;= a xor b;   -- propagate
+    g &lt;= a and b;   -- generate
+
+    c(0) &lt;= cin;
+
+    carry_stage: for i in 0 to WIDTH-1 generate
+        c(i+1) &lt;= g(i) or (p(i) and c(i));
+    end generate carry_stage;
+
+    sum  &lt;= p xor c(WIDTH-1 downto 0);
+    cout &lt;= c(WIDTH);
+end architecture structural;</code></pre>
+  <p>Because every <code>c(i+1)</code> is an independent concurrent signal assignment inside the <code>generate</code> statement, rather than a signal threaded through instantiated full-adder entities, a synthesis tool is free to expand and optimize the whole carry chain into a shallow tree of gates -- the same idea as the carry-lookahead adder from the Digital Logic Design course, and the same trade-off (more gates, much less delay) shown in its Verilog implementation.</p>
+
+  <h3>generate statements beyond adders</h3>
+  <p>The same <code>for ... generate</code> pattern used here and in the Ripple-Carry Adders lesson scales to building any regular, repeated structure parametrically -- an N-bit ring counter, an array of registers, or a tree of comparators -- without writing out each stage by hand. VHDL also supports <code>if ... generate</code>, which conditionally includes or excludes a block of the architecture at compile time based on a generic value, useful for optional debug logic or alternate implementations selected by a generic.</p>',
+  12
+),
+(
+  (SELECT id FROM courses WHERE slug = 'vhdl'),
+  'vhdl-fsm-design',
+  'Finite State Machines in VHDL',
+  '<p><span class="tag">Advanced</span></p>
+  <h3>Encoding states with an enumerated type</h3>
+  <p>Rather than hard-coding state values as bit patterns, VHDL lets you define a dedicated enumerated type listing the state names directly -- the compiler (and the synthesis tool) chooses the actual bit encoding, which is both clearer to read and less error-prone than managing the encoding by hand.</p>
+  <pre><code>type state_type is (S_IDLE, S_GOT1, S_GOT10, S_MATCH);
+signal state, next_state : state_type;</code></pre>
+
+  <h3>Moore sequence detector for "101"</h3>
+  <p>This is the same Moore-machine sequence detector introduced in the Digital Logic Design and Verilog courses, following the identical three-part structure: combinational next-state logic, a clocked state register, and a combinational output equation.</p>
+  <pre><code>library ieee;
+use ieee.std_logic_1164.all;
+
+entity seq_detector_101_moore is
+    port (
+        clk, reset : in  std_logic;
+        bit_in     : in  std_logic;
+        y          : out std_logic
+    );
+end entity seq_detector_101_moore;
+
+architecture behavioral of seq_detector_101_moore is
+    type state_type is (S_IDLE, S_GOT1, S_GOT10, S_MATCH);
+    signal state, next_state : state_type;
+begin
+    -- next-state logic (combinational)
+    process(state, bit_in)
+    begin
+        case state is
+            when S_IDLE =&gt;
+                if bit_in = ''1'' then next_state &lt;= S_GOT1; else next_state &lt;= S_IDLE; end if;
+            when S_GOT1 =&gt;
+                if bit_in = ''1'' then next_state &lt;= S_GOT1; else next_state &lt;= S_GOT10; end if;
+            when S_GOT10 =&gt;
+                if bit_in = ''1'' then next_state &lt;= S_MATCH; else next_state &lt;= S_IDLE; end if;
+            when S_MATCH =&gt;
+                if bit_in = ''1'' then next_state &lt;= S_GOT1; else next_state &lt;= S_GOT10; end if;
+        end case;
+    end process;
+
+    -- state register (sequential)
+    process(clk, reset)
+    begin
+        if reset = ''1'' then
+            state &lt;= S_IDLE;
+        elsif rising_edge(clk) then
+            state &lt;= next_state;
+        end if;
+    end process;
+
+    -- Moore output: depends only on state
+    y &lt;= ''1'' when state = S_MATCH else ''0'';
+end architecture behavioral;</code></pre>
+  <p>Because <code>state_type</code> is an enumeration with exactly four possible values, the <code>case</code> statement above already covers every case -- unlike the <code>std_logic_vector</code>-based examples earlier in this course, no <code>when others</code> branch is needed here.</p>
+
+  <h3>Mealy version</h3>
+  <p>A Mealy machine produces its output on the transition, which in VHDL means the output equation reads the current state <em>and</em> the current input, instead of state alone:</p>
+  <pre><code>y &lt;= ''1'' when (state = S_GOT10 and bit_in = ''1'') else ''0'';</code></pre>
+  <p>With this change, <code>S_MATCH</code> is no longer needed as a separate state at all -- exactly the same Moore-vs-Mealy trade-off the Digital Logic Design and Verilog courses describe for this same detector.</p>',
+  13
+),
+(
+  (SELECT id FROM courses WHERE slug = 'vhdl'),
+  'vhdl-memory-modeling',
+  'Modeling Memory in VHDL',
+  '<p><span class="tag">Advanced</span></p>
+  <h3>Modeling a ROM</h3>
+  <p>VHDL models memory as an array type -- a signal (or constant) whose elements are themselves vectors, indexed like a small lookup table.</p>
+  <pre><code>library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity rom_16x8 is
+    port (
+        addr : in  std_logic_vector(3 downto 0);
+        data : out std_logic_vector(7 downto 0)
+    );
+end entity rom_16x8;
+
+architecture behavioral of rom_16x8 is
+    type rom_array is array (0 to 15) of std_logic_vector(7 downto 0);
+    constant ROM_DATA : rom_array := (
+        0 =&gt; x"00",
+        1 =&gt; x"01",
+        2 =&gt; x"04",
+        others =&gt; x"00"
+    );
+begin
+    data &lt;= ROM_DATA(to_integer(unsigned(addr)));
+end architecture behavioral;</code></pre>
+  <p><code>to_integer(unsigned(addr))</code> converts the address bus into a plain integer usable as an array index -- VHDL arrays are indexed by integers (or another discrete type), not directly by <code>std_logic_vector</code>. The <code>x"00"</code> syntax is VHDL&prime;s hexadecimal literal notation, equivalent to <code>8''h00</code> in Verilog.</p>
+
+  <h3>Modeling a RAM</h3>
+  <pre><code>entity ram_16x8 is
+    port (
+        clk          : in  std_logic;
+        write_enable : in  std_logic;
+        addr         : in  std_logic_vector(3 downto 0);
+        data_in      : in  std_logic_vector(7 downto 0);
+        data_out     : out std_logic_vector(7 downto 0)
+    );
+end entity ram_16x8;
+
+architecture behavioral of ram_16x8 is
+    type ram_array is array (0 to 15) of std_logic_vector(7 downto 0);
+    signal mem : ram_array := (others =&gt; (others =&gt; ''0''));
+begin
+    process(clk)
+    begin
+        if rising_edge(clk) then
+            if write_enable = ''1'' then
+                mem(to_integer(unsigned(addr))) &lt;= data_in;
+            end if;
+        end if;
+    end process;
+
+    data_out &lt;= mem(to_integer(unsigned(addr)));   -- combinational read
+end architecture behavioral;</code></pre>
+  <p>This is the same combinational-read, synchronous-write style introduced in the Verilog course&prime;s memory-modeling lesson -- the write happens only on a clock edge with <code>write_enable</code> high, while the read is a plain concurrent assignment that always reflects whatever <code>addr</code> currently points to.</p>',
+  14
+),
+(
+  (SELECT id FROM courses WHERE slug = 'vhdl'),
+  'vhdl-testbenches-verification',
+  'Testbenches & Verification in VHDL',
+  '<p><span class="tag">Advanced</span></p>
+  <h3>Why testbenches</h3>
+  <p>Just as in the Verilog course, every circuit in this course needs to be checked against its truth table or state diagram before anyone trusts it in real hardware. A VHDL testbench is a separate entity with no ports at all (since it has nothing to connect to outside itself), containing a <code>process</code> that drives the design under test and checks its response.</p>
+
+  <h3>A simple testbench for the full adder</h3>
+  <pre><code>library ieee;
+use ieee.std_logic_1164.all;
+
+entity full_adder_tb is
+end entity full_adder_tb;
+
+architecture sim of full_adder_tb is
+    signal a, b, cin, sum, cout : std_logic;
+begin
+    dut : entity work.full_adder
+        port map (a =&gt; a, b =&gt; b, cin =&gt; cin, sum =&gt; sum, cout =&gt; cout);
+
+    process
+    begin
+        a &lt;= ''0''; b &lt;= ''0''; cin &lt;= ''0''; wait for 10 ns;
+        a &lt;= ''0''; b &lt;= ''1''; cin &lt;= ''0''; wait for 10 ns;
+        a &lt;= ''1''; b &lt;= ''1''; cin &lt;= ''0''; wait for 10 ns;
+        a &lt;= ''1''; b &lt;= ''1''; cin &lt;= ''1''; wait for 10 ns;
+
+        assert false report "Testbench finished" severity note;
+        wait;
+    end process;
+end architecture sim;</code></pre>
+  <p><code>wait for 10 ns;</code> advances simulation time, similar to Verilog&prime;s <code>#10</code> delay, letting the combinational logic settle before the next input change. The final bare <code>wait;</code> (with no condition) pauses the process forever once the test is done, preventing it from looping back to the beginning and re-running.</p>
+
+  <h3>Self-checking with assert</h3>
+  <p>Rather than requiring a human to read through a waveform or a log, <code>assert</code> lets a testbench check its own results and report a clear failure automatically:</p>
+  <pre><code>process
+begin
+    a &lt;= ''1''; b &lt;= ''1''; cin &lt;= ''0''; wait for 10 ns;
+    assert (sum = ''0'' and cout = ''1'')
+        report "Full adder mismatch for a=1,b=1,cin=0"
+        severity error;
+
+    wait;
+end process;</code></pre>
+  <p><code>severity error</code> (as opposed to <code>note</code> or <code>warning</code>) is what most simulators treat as an actual test failure -- typically highlighted in the simulation log and, depending on the simulator&prime;s settings, able to stop the run entirely.</p>
+
+  <h3>Clock generation for sequential testbenches</h3>
+  <pre><code>signal clk : std_logic := ''0'';
+
+clk_gen : process
+begin
+    clk &lt;= ''0''; wait for 5 ns;
+    clk &lt;= ''1''; wait for 5 ns;
+end process;</code></pre>
+  <p>Unlike the combinational testbench above, this process deliberately has no final <code>wait;</code> -- it is meant to loop forever, continuously toggling <code>clk</code> for as long as the simulation runs, generating a free-running 10 ns-period clock exactly like the Verilog course&prime;s <code>always #5 clk = ~clk;</code> pattern.</p>
+  <p>Writing testbenches like this for every module in this course -- checking each one against the exact truth table, characteristic equation, or state diagram it was designed from in the Digital Logic Design course -- is one of the most valuable habits for catching bugs before a design ever reaches real hardware.</p>',
+  15
 ),
 (
   (SELECT id FROM courses WHERE slug = 'vhdl'),
@@ -4028,8 +4881,9 @@ end architecture behavior;</code></pre>
       <tr><td>Learning curve</td><td>More boilerplate, but catches more mistakes at compile time</td><td>Faster to write, easier to make subtle mistakes</td></tr>
     </tbody>
   </table>
-  <p>Both languages are widely used and most FPGA/ASIC tools support both -- some teams even mix them in the same project. Learning the concepts (entities/modules, signals/wires, processes/always blocks) transfers directly between the two.</p>',
-  3
+  <p>Both languages are widely used and most FPGA/ASIC tools support both -- some teams even mix them in the same project. Learning the concepts (entities/modules, signals/wires, processes/always blocks) transfers directly between the two.</p>
+  <p>Every combinational and sequential circuit built in this course -- adders, muxes, decoders, flip-flops, counters, FSMs, memory, testbenches -- has a matching implementation in the Verilog course, letting you compare both languages&prime; approach to the exact same problem side by side.</p>',
+  16
 )
 ON DUPLICATE KEY UPDATE
   title = VALUES(title),
