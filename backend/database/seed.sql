@@ -1665,6 +1665,43 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO lessons (course_id, slug, title, content, sort_order) VALUES
 (
   (SELECT id FROM courses WHERE slug = 'pcb-design'),
+  'pcb-fundamentals',
+  'PCB Fundamentals',
+  '<h3>What a PCB is</h3>
+  <p>A printed circuit board (PCB) is an insulating substrate with layers of conductive copper etched into patterns (traces) that connect components together, replacing the loose wires of a breadboard or point-to-point wiring with a mechanically stable, repeatable, and compact interconnect.</p>
+
+  <h3>Base materials</h3>
+  <table class="data-table">
+    <caption>Common PCB substrate materials</caption>
+    <thead><tr><th>Material</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>FR4 (glass-reinforced epoxy)</td><td>The overwhelming default for rigid boards -- good mechanical strength, decent electrical properties, and low cost</td></tr>
+      <tr><td>Rogers / PTFE-based laminates</td><td>Used for RF and high-speed boards where FR4&prime;s electrical losses become significant at higher frequencies</td></tr>
+      <tr><td>Polyimide</td><td>Used for flexible ("flex") and rigid-flex boards, since it can bend repeatedly without cracking</td></tr>
+      <tr><td>Aluminum-core (MCPCB)</td><td>Used where a board needs to conduct heat away efficiently, e.g. high-power LED boards</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Copper weight</h3>
+  <p>Copper thickness is specified in ounces per square foot -- the weight of copper that would cover one square foot of board at that thickness. 1 oz (about 35 &micro;m) is the standard default for signal layers; 2 oz or heavier copper is used when traces need to carry more current, since a thicker trace of the same width has lower resistance and can dissipate heat better.</p>
+
+  <h3>Rigid, flexible, and rigid-flex boards</h3>
+  <table class="data-table">
+    <caption>Board construction types</caption>
+    <thead><tr><th>Type</th><th>Typical use</th></tr></thead>
+    <tbody>
+      <tr><td>Rigid</td><td>The vast majority of boards -- fixed shape, mounted in an enclosure</td></tr>
+      <tr><td>Flexible</td><td>Boards that must bend or fold, e.g. connecting two parts of a folding device</td></tr>
+      <tr><td>Rigid-flex</td><td>Combines rigid sections (for components) with flexible sections (for connections between them), replacing a rigid board plus a separate cable</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Layer count, at a glance</h3>
+  <p>A board&prime;s "layer count" refers to the number of copper layers, not the number of physical sheets of material -- a 4-layer board has four separate copper layers (commonly: top signal, ground plane, power plane, bottom signal) separated and bonded together with insulating material. Layer stack-ups are covered in detail in their own lesson later in this course.</p>',
+  1
+),
+(
+  (SELECT id FROM courses WHERE slug = 'pcb-design'),
   'schematic-capture',
   'Schematic Capture',
   '<h3>What a schematic is</h3>
@@ -1690,7 +1727,54 @@ INSERT INTO lessons (course_id, slug, title, content, sort_order) VALUES
       <tr><td>J / P</td><td>Connector</td></tr>
     </tbody>
   </table>',
-  1
+  2
+),
+(
+  (SELECT id FROM courses WHERE slug = 'pcb-design'),
+  'component-footprints-and-packages',
+  'Component Footprints & Packages',
+  '<h3>Through-hole vs. surface-mount</h3>
+  <table class="data-table">
+    <caption>Through-hole (THT) vs. surface-mount (SMD)</caption>
+    <thead><tr><th>Aspect</th><th>Through-hole (THT)</th><th>Surface-mount (SMD)</th></tr></thead>
+    <tbody>
+      <tr><td>Mounting</td><td>Leads pass through drilled holes and are soldered on the opposite side</td><td>Component sits directly on pads on the board surface</td></tr>
+      <tr><td>Mechanical strength</td><td>Stronger -- good for connectors and parts under mechanical stress</td><td>Weaker per joint, but usually fine for most components</td></tr>
+      <tr><td>Board density</td><td>Lower -- needs drilled holes and more board area</td><td>Much higher -- enables far smaller boards</td></tr>
+      <tr><td>Assembly</td><td>Often hand-solderable, typically wave soldered in production</td><td>Reflow soldered in production; fine-pitch parts are difficult to hand-solder</td></tr>
+    </tbody>
+  </table>
+  <p>Nearly all modern consumer electronics are SMD-dominant, with THT reserved mainly for connectors, large capacitors, and anything needing extra mechanical strength.</p>
+
+  <h3>Common SMD passive package sizes</h3>
+  <table class="data-table">
+    <caption>Standard SMD passive (resistor/capacitor) sizes</caption>
+    <thead><tr><th>Package (imperial code)</th><th>Approx. dimensions</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>0402</td><td>1.0 &times; 0.5 mm</td><td>Very small, needs fine-pitch assembly capability</td></tr>
+      <tr><td>0603</td><td>1.6 &times; 0.8 mm</td><td>A common default for moderately dense boards</td></tr>
+      <tr><td>0805</td><td>2.0 &times; 1.25 mm</td><td>Easier to hand-solder, common on hobbyist and prototype boards</td></tr>
+      <tr><td>1206</td><td>3.2 &times; 1.6 mm</td><td>Large enough for higher-power resistors, easy hand assembly</td></tr>
+    </tbody>
+  </table>
+  <p>The imperial code gives the package length and width in hundredths of an inch -- an "0603" part is 0.06" &times; 0.03".</p>
+
+  <h3>Common IC package types</h3>
+  <table class="data-table">
+    <caption>Common integrated circuit packages</caption>
+    <thead><tr><th>Package</th><th>Pin style</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>DIP</td><td>Through-hole, two rows</td><td>Easy to hand-solder and prototype with, but bulky -- mostly seen on breadboard-friendly and hobbyist parts today</td></tr>
+      <tr><td>SOIC</td><td>Surface-mount, two rows, gull-wing leads</td><td>A common, still hand-solderable SMD package for simpler ICs</td></tr>
+      <tr><td>QFP / TQFP</td><td>Surface-mount, four rows, gull-wing leads</td><td>Common for microcontrollers with many pins; leads are visible and can be hand-soldered with practice</td></tr>
+      <tr><td>QFN</td><td>Surface-mount, pads on the underside, no visible leads</td><td>Smaller than QFP, but requires reflow soldering and complicates hand rework</td></tr>
+      <tr><td>BGA</td><td>Surface-mount, solder balls in a grid under the package</td><td>Highest pin density, but the joints cannot be visually inspected and reliably require X-ray or a proper reflow process to assemble correctly</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Land patterns and footprint accuracy</h3>
+  <p>The "footprint" or "land pattern" is the exact copper pad shape and spacing a component needs on the board. Footprints must match the component&prime;s mechanical datasheet precisely -- a footprint that is even slightly wrong can cause a part to sit crooked, tombstone (stand up on one end) during reflow, or simply not solder reliably at all. Most PCB tools ship standard footprint libraries, but any unusual or new component still needs its footprint checked against the datasheet before committing to a production order.</p>',
+  3
 ),
 (
   (SELECT id FROM courses WHERE slug = 'pcb-design'),
@@ -1725,8 +1809,286 @@ INSERT INTO lessons (course_id, slug, title, content, sort_order) VALUES
       <tr><td>4-layer</td><td>Adds dedicated ground and power planes for better signal integrity</td></tr>
       <tr><td>6+ layer</td><td>Complex or high-speed boards needing controlled impedance and extra routing room</td></tr>
     </tbody>
-  </table>',
-  2
+  </table>
+  <p>The next several lessons go much deeper into stack-up construction, design rules, vias, power distribution, grounding, and signal integrity -- the details behind why these placement and routing guidelines work.</p>',
+  4
+),
+(
+  (SELECT id FROM courses WHERE slug = 'pcb-design'),
+  'layer-stackups-in-depth',
+  'Layer Stack-Ups in Depth',
+  '<h3>Why layer count matters</h3>
+  <p>Adding layers costs more per board but buys dedicated space for power, ground, and extra routing. This lesson goes further into how a stack-up is actually built and why the layer <em>order</em> matters, not just the layer count.</p>
+
+  <h3>Core and prepreg</h3>
+  <table class="data-table">
+    <caption>The two building blocks of a multilayer stack-up</caption>
+    <thead><tr><th>Material</th><th>What it is</th></tr></thead>
+    <tbody>
+      <tr><td>Core</td><td>A fully cured, rigid sheet of fiberglass/epoxy with copper foil already bonded to both sides</td></tr>
+      <tr><td>Prepreg</td><td>A partially cured fiberglass/epoxy sheet, uncured until the whole stack is pressed and baked together, that bonds adjacent cores (and any additional copper layers) into one solid board</td></tr>
+    </tbody>
+  </table>
+  <p>A stack-up is built by alternating cores and prepreg layers, then curing the whole sandwich together under heat and pressure -- which is why adding layers is not simply "adding more copper foil" but changing the entire mechanical lay-up of the board.</p>
+
+  <h3>A typical 4-layer stack-up</h3>
+  <table class="data-table">
+    <caption>Common 4-layer stack-up (top to bottom)</caption>
+    <thead><tr><th>Layer</th><th>Typical role</th></tr></thead>
+    <tbody>
+      <tr><td>Top signal (L1)</td><td>Component placement and primary routing</td></tr>
+      <tr><td>Ground plane (L2)</td><td>Solid reference plane, directly under L1</td></tr>
+      <tr><td>Power plane (L3)</td><td>Solid or split power distribution, directly above L4</td></tr>
+      <tr><td>Bottom signal (L4)</td><td>Secondary routing, sometimes also used for components</td></tr>
+    </tbody>
+  </table>
+  <p>Placing a solid ground plane directly beneath the primary signal layer gives every trace on that layer a short, low-inductance return path immediately below it -- important for both signal integrity and EMI performance, covered in their own lessons later in this course.</p>
+
+  <h3>Symmetry and warping</h3>
+  <p>A stack-up should be roughly symmetric top-to-bottom in copper coverage and material thickness. An unbalanced stack-up (e.g. much more copper on one side than the other) can cause the board to warp or bow after the heat of manufacturing or soldering, since the two sides of the board cool and shrink at different rates.</p>
+
+  <h3>Controlled impedance</h3>
+  <p>For high-speed or RF signals, the stack-up (layer spacing, dielectric material, and trace width together) is deliberately designed so specific traces have a controlled, predictable characteristic impedance -- typically 50 &Omega; single-ended or 90-100 &Omega; differential for common digital interfaces. Fabricators offer impedance calculators and stack-up guidance for exactly this reason, since getting it wrong causes signal reflections, covered in the Signal Integrity Basics lesson.</p>',
+  5
+),
+(
+  (SELECT id FROM courses WHERE slug = 'pcb-design'),
+  'design-rules-and-drc',
+  'Design Rules & DRC',
+  '<h3>What design rules are</h3>
+  <p>Design rules are the minimum/maximum dimensions a PCB layout must respect so a specific fabricator can reliably manufacture the board -- trace width, spacing, drill size, and more. Every fabricator publishes a design rule set (sometimes several tiers, cheaper for looser rules, more expensive for tighter ones).</p>
+
+  <h3>Common design rules</h3>
+  <table class="data-table">
+    <caption>Typical design rule categories</caption>
+    <thead><tr><th>Rule</th><th>What it constrains</th><th>Why it matters</th></tr></thead>
+    <tbody>
+      <tr><td>Minimum trace width</td><td>Narrowest allowed copper trace</td><td>Traces thinner than the fabricator can reliably etch may end up too narrow, too resistive, or open entirely</td></tr>
+      <tr><td>Minimum trace spacing (clearance)</td><td>Closest allowed distance between copper features</td><td>Too little spacing risks solder bridging or arcing at higher voltages</td></tr>
+      <tr><td>Minimum annular ring</td><td>Copper remaining around a drilled hole</td><td>Too little ring risks the pad breaking away from the hole (a "pad blowout") during drilling or use</td></tr>
+      <tr><td>Minimum drill size</td><td>Smallest hole diameter</td><td>Very small drills are fragile and break more often during fabrication, raising cost and defect rates</td></tr>
+      <tr><td>Solder mask clearance</td><td>Gap between solder mask and copper</td><td>Too little clearance can leave mask covering part of a pad, or expose copper it should not</td></tr>
+    </tbody>
+  </table>
+
+  <h3>ERC vs. DRC</h3>
+  <table class="data-table">
+    <caption>Electrical Rule Check vs. Design Rule Check</caption>
+    <thead><tr><th>Check</th><th>Runs on</th><th>Catches</th></tr></thead>
+    <tbody>
+      <tr><td>ERC (Electrical Rule Check)</td><td>The schematic</td><td>Unconnected pins, conflicting outputs driving the same net, missing power connections</td></tr>
+      <tr><td>DRC (Design Rule Check)</td><td>The physical layout</td><td>Trace/spacing violations, unrouted nets, footprint overlaps, drill/annular ring violations</td></tr>
+    </tbody>
+  </table>
+  <p>Both checks are automated tools built into every PCB design package, and both should be run -- and pass cleanly, with every warning understood and deliberately accepted or fixed -- before a board is sent to fabrication. A clean DRC does not guarantee a working board (it cannot catch a wrong resistor value, for instance), but a DRC violation left unresolved is a near-guarantee of a manufacturing defect.</p>
+
+  <h3>Setting rules to match your fabricator</h3>
+  <p>PCB design tools let a project&prime;s design rules be configured before layout even begins. Setting them to match the intended fabricator&prime;s actual published capabilities from the start avoids discovering a violation only after the layout is otherwise complete, when fixing it may mean re-routing large sections of the board.</p>',
+  6
+),
+(
+  (SELECT id FROM courses WHERE slug = 'pcb-design'),
+  'vias-and-drill-types',
+  'Vias & Drill Types',
+  '<h3>What a via is</h3>
+  <p>A via is a plated hole that electrically connects copper on different layers of a board -- effectively a tiny vertical wire running through the board&prime;s thickness.</p>
+
+  <h3>Via types</h3>
+  <table class="data-table">
+    <caption>Common via types</caption>
+    <thead><tr><th>Type</th><th>Spans</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Through-hole via</td><td>Every layer, top to bottom</td><td>Cheapest and simplest -- drilled all the way through the board, whether or not every layer actually needs the connection</td></tr>
+      <tr><td>Blind via</td><td>An outer layer to an inner layer (not all the way through)</td><td>Saves space by not passing through layers that do not need it, but costs more to fabricate</td></tr>
+      <tr><td>Buried via</td><td>Between two inner layers only, invisible from either outer surface</td><td>Most expensive via type, used mainly on dense, high-layer-count boards</td></tr>
+      <tr><td>Microvia</td><td>A very small, laser-drilled via, typically one layer deep</td><td>Used in HDI (High-Density Interconnect) designs, e.g. smartphone boards, to route extremely fine-pitch BGA packages</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Via-in-pad</h3>
+  <p>Placing a via directly inside a component&prime;s solder pad (rather than beside it, connected by a short trace) saves significant space -- important for fine-pitch BGA fanout -- but the via must be filled and capped (typically with conductive or non-conductive epoxy, then plated over) so solder does not wick down into the hole during reflow and starve the joint of solder.</p>
+
+  <h3>Drill aspect ratio</h3>
+  <p>Aspect ratio is the board thickness divided by the drilled hole diameter. A higher aspect ratio (a thick board with a very small hole) is harder to reliably plate all the way through the hole&prime;s full depth -- most fabricators publish a maximum aspect ratio (commonly around 8:1 to 10:1 for standard processes) that a design must stay within.</p>
+
+  <h3>Via cost and count</h3>
+  <p>Every via adds a small amount of cost and a small amount of drilling/plating risk. On simple, low-layer-count boards this rarely matters, but on dense or high-layer-count designs, minimizing unnecessary vias (and using through-hole vias instead of blind/buried wherever the design allows) is a straightforward way to reduce both cost and manufacturing risk.</p>',
+  7
+),
+(
+  (SELECT id FROM courses WHERE slug = 'pcb-design'),
+  'power-distribution-and-decoupling',
+  'Power Distribution & Decoupling',
+  '<h3>Power and ground planes</h3>
+  <p>A dedicated copper plane (an entire layer, or a large continuous copper area) for power or ground gives every component on the board a low-resistance, low-inductance connection to that net from nearly anywhere on the board, instead of relying on long, narrow traces that add resistance and inductance the further a component sits from the source.</p>
+
+  <h3>Why decoupling capacitors are needed</h3>
+  <p>Digital ICs draw sudden, brief current spikes as their internal transistors switch state. Power traces and planes have some inductance, and an inductor resists sudden current changes (as covered in the Electricity & Electronics course) -- so without help, those current spikes cause the local supply voltage to sag momentarily right when the chip needs it most. A decoupling (or "bypass") capacitor placed very close to the chip supplies that sudden current locally, from a source with far less inductance in the way than the main power supply.</p>
+
+  <h3>Placement matters more than value</h3>
+  <p>A decoupling capacitor works by being electrically close to the IC pin it protects -- physical distance on the board translates directly into trace inductance, which undermines the capacitor&prime;s ability to respond fast enough. The standard practice is to place decoupling capacitors as close as physically possible to each power pin, often directly underneath the IC on the opposite layer, with the shortest and widest possible traces (or a direct via down to a power plane) connecting them.</p>
+
+  <h3>Typical decoupling scheme</h3>
+  <table class="data-table">
+    <caption>A common multi-value decoupling strategy</caption>
+    <thead><tr><th>Capacitor</th><th>Typical value</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>Bulk capacitor</td><td>10-100 &micro;F</td><td>Supplies slower, larger current demands and smooths overall board-level supply dips</td></tr>
+      <tr><td>Local decoupling capacitor</td><td>0.1 &micro;F (100 nF)</td><td>Placed at nearly every IC power pin, handling fast switching transients</td></tr>
+      <tr><td>High-frequency decoupling capacitor</td><td>1-10 nF</td><td>Added for parts with especially fast internal switching, targeting even higher-frequency noise than the 0.1 &micro;F capacitor alone handles well</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Plane splits</h3>
+  <p>A board with multiple different supply voltages (e.g. 3.3 V and 5 V) often splits a single power layer into separate copper regions ("islands") for each voltage, rather than using one plane per voltage rail, to save layers. A trace should never cross directly over a gap between two plane splits, since doing so removes its clean, close return path directly underneath it -- exactly the concern covered in the Signal Integrity Basics lesson.</p>',
+  8
+),
+(
+  (SELECT id FROM courses WHERE slug = 'pcb-design'),
+  'grounding-strategies-and-emi',
+  'Grounding Strategies & EMI Basics',
+  '<h3>Why grounding strategy matters</h3>
+  <p>"Ground" is not one single ideal, zero-resistance point -- every real ground connection has some resistance and inductance, so different points on a "ground" plane can actually sit at slightly different voltages when significant current is flowing. Grounding strategy is about controlling where that current actually flows, so it does not couple noise from one part of the circuit into another.</p>
+
+  <h3>Single-point vs. plane grounding</h3>
+  <table class="data-table">
+    <caption>Grounding approaches</caption>
+    <thead><tr><th>Approach</th><th>How it works</th><th>Typical use</th></tr></thead>
+    <tbody>
+      <tr><td>Single-point grounding</td><td>Every ground connection routed back to one common point via separate wires/traces</td><td>Low-frequency analog and audio circuits, where it avoids ground loops</td></tr>
+      <tr><td>Multi-point / plane grounding</td><td>A shared, low-impedance ground plane that everything connects to at the nearest convenient point</td><td>Digital and high-frequency circuits, where a plane&prime;s low impedance at high frequency matters more than avoiding ground loops</td></tr>
+    </tbody>
+  </table>
+  <p>Most modern digital PCBs use plane grounding almost exclusively, since at the frequencies digital signals actually operate at, a solid plane is a far better ground than any practical set of individual wires.</p>
+
+  <h3>Mixed-signal grounding</h3>
+  <p>Boards combining sensitive analog circuitry (e.g. an ADC front end) with noisy digital circuitry (e.g. a microcontroller) commonly separate analog and digital ground <em>regions</em> on the same plane, physically routing sensitive analog components away from noisy digital switching, and joining the two ground regions at a single, carefully chosen point (often right at the mixed-signal IC itself) -- preventing digital switching noise currents from flowing directly through the sensitive analog ground area.</p>
+
+  <h3>EMI and EMC, briefly</h3>
+  <table class="data-table">
+    <caption>EMI vs. EMC</caption>
+    <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>EMI (Electromagnetic Interference)</td><td>Unwanted electromagnetic energy a circuit emits or is disturbed by</td></tr>
+      <tr><td>EMC (Electromagnetic Compatibility)</td><td>A product&prime;s ability to operate correctly in its intended environment without causing, or suffering from, EMI -- and the regulatory standards that certify this</td></tr>
+    </tbody>
+  </table>
+  <p>Good grounding, solid reference planes directly under signal layers, short high-speed trace lengths, and keeping noisy and sensitive circuits physically separated are the layout-level habits that most directly reduce EMI -- far cheaper to design in from the start than to fix with shielding or filtering after a board fails EMC testing.</p>',
+  9
+),
+(
+  (SELECT id FROM courses WHERE slug = 'pcb-design'),
+  'signal-integrity-basics',
+  'Signal Integrity Basics',
+  '<h3>Traces as transmission lines</h3>
+  <p>At low speeds, a trace behaves like a simple wire -- voltage appears everywhere along it at essentially the same instant. As signal edges get faster (or traces get electrically longer relative to that edge speed), a trace starts behaving like a transmission line, with a real, physical <strong>characteristic impedance</strong> that the signal "sees" as it travels down the trace.</p>
+
+  <h3>Impedance mismatches cause reflections</h3>
+  <p>If a signal traveling down a trace of one impedance hits a discontinuity -- a via, a connector, a trace width change, or simply the receiving device&prime;s input -- part of the signal energy reflects backward instead of continuing forward, exactly like a wave reflecting off a mismatched boundary. These reflections can add to or subtract from the original signal, distorting its shape and, in severe cases, causing logic errors.</p>
+
+  <h3>Termination</h3>
+  <p>A termination resistor, sized to match the trace&prime;s characteristic impedance, absorbs a signal at the end of its trace instead of letting it reflect. Two common placements:</p>
+  <table class="data-table">
+    <caption>Common termination styles</caption>
+    <thead><tr><th>Style</th><th>Placement</th></tr></thead>
+    <tbody>
+      <tr><td>Series termination</td><td>A resistor placed right at the driving end of the trace</td></tr>
+      <tr><td>Parallel termination</td><td>A resistor placed right at the receiving end of the trace, to a reference voltage</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Crosstalk</h3>
+  <p>Two traces running close together and parallel for any significant distance couple energy between each other through their shared electric and magnetic fields, called crosstalk -- a fast-switching "aggressor" trace can induce unwanted noise onto a nearby "victim" trace. Increasing spacing between traces, routing sensitive traces on a different layer, or routing a ground trace/via fence between them all reduce crosstalk.</p>
+
+  <h3>Return paths</h3>
+  <p>Every signal current needs a return path back to its source, and that return current follows the path of least impedance -- at the frequencies digital signals actually contain, that is almost always the plane directly beneath the signal trace, not necessarily the shortest physical distance. Routing a trace over a plane split, or over a gap in a ground plane, forces the return current to detour around the gap, which increases loop area and both radiated emissions and susceptibility to interference.</p>',
+  10
+),
+(
+  (SELECT id FROM courses WHERE slug = 'pcb-design'),
+  'high-speed-design-considerations',
+  'High-Speed Design Considerations',
+  '<h3>What counts as "high-speed"</h3>
+  <p>A signal is generally considered high-speed once its edge rate (how fast it transitions, not necessarily its clock frequency) becomes fast enough that trace length starts to matter electrically -- as a rule of thumb, once a trace is longer than about 1/6 of the signal&prime;s effective electrical wavelength, it needs transmission-line treatment (controlled impedance, careful routing) rather than being treated as a simple wire.</p>
+
+  <h3>Differential pairs</h3>
+  <p>Many high-speed interfaces (USB, Ethernet, HDMI, PCIe, and many others) send each signal as a pair of traces carrying equal and opposite voltage, with the receiver caring only about the <em>difference</em> between them.</p>
+  <table class="data-table">
+    <caption>Why differential signaling helps</caption>
+    <thead><tr><th>Benefit</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Noise immunity</td><td>Noise coupling onto both traces roughly equally cancels out, since only the difference between them matters</td></tr>
+      <tr><td>Lower EMI</td><td>The two traces&prime; opposite-polarity fields partially cancel each other at a distance</td></tr>
+    </tbody>
+  </table>
+  <p>Differential pairs must be routed with matched length and consistent, tight spacing along their entire path -- any place they diverge in length or spacing distorts the timing relationship between the two signals that the whole technique depends on.</p>
+
+  <h3>Length matching</h3>
+  <p>Beyond differential pairs, any group of signals that must arrive at their destination at the same time (e.g. the address or data lines of a memory bus) needs length matching -- deliberately routing each trace to the same electrical length, often adding small serpentine ("trombone") bends to shorter traces so every trace in the group ends up equally long.</p>
+
+  <h3>Via stubs</h3>
+  <p>A through-hole via drilled all the way through a thick, high-layer-count board, but only used to connect an outer layer to a nearby inner layer, leaves an unused length of plated hole below the connection -- a "stub" that can reflect high-speed signal energy back into the signal path. Back-drilling (removing the unused stub after plating) or using blind vias instead (from the Vias & Drill Types lesson) avoids this on the fastest designs.</p>
+
+  <h3>Return path continuity, revisited</h3>
+  <p>High-speed design makes the return-path concerns from the Signal Integrity Basics lesson especially critical: every via a high-speed signal passes through that changes which plane layer is directly beneath it should ideally have a nearby ground via too, giving the return current a similarly short path to follow between planes.</p>',
+  11
+),
+(
+  (SELECT id FROM courses WHERE slug = 'pcb-design'),
+  'thermal-management-in-pcb-design',
+  'Thermal Management in PCB Design',
+  '<h3>Why heat matters on a PCB</h3>
+  <p>Every component that dissipates power raises its own temperature above the surrounding board and air; if that heat cannot escape fast enough, component temperature keeps rising until it exceeds a safe operating limit, degrading performance, reliability, or lifespan, and in the worst case causing outright failure.</p>
+
+  <h3>Copper as a heat spreader</h3>
+  <p>Copper conducts heat very well, so a generous copper pour connected to a hot component&prime;s thermal pad or ground pins spreads heat across a much larger board area than the component alone, letting the surrounding air (or an enclosure) absorb it more effectively.</p>
+
+  <h3>Thermal vias</h3>
+  <p>An array of vias placed directly under a component&prime;s thermal pad (common on power ICs and some larger QFN packages) conducts heat down through the board to a copper plane or the opposite side, similar in principle to how vias conduct electrical current between layers. More thermal vias, and larger via diameters, generally improve heat transfer, up to the point of diminishing returns set by the component&prime;s own package thermal resistance.</p>
+
+  <h3>Component derating and spacing</h3>
+  <table class="data-table">
+    <caption>Practical thermal design habits</caption>
+    <thead><tr><th>Practice</th><th>Why it helps</th></tr></thead>
+    <tbody>
+      <tr><td>Derating (running a part below its absolute maximum rating)</td><td>Leaves margin for manufacturing tolerance, ambient temperature variation, and long-term reliability</td></tr>
+      <tr><td>Spacing hot components apart</td><td>Prevents one component&prime;s heat from raising the local ambient temperature around a neighboring component</td></tr>
+      <tr><td>Keeping heat-sensitive parts (e.g. electrolytic capacitors, crystal oscillators) away from hot components</td><td>Heat measurably shortens electrolytic capacitor lifespan and can shift a crystal&prime;s frequency</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Heat sinks and enclosure airflow</h3>
+  <p>For components dissipating more heat than copper pours and vias alone can handle, an external heat sink attached to the component (sometimes with a via-and-copper thermal path continuing to a second heat sink on the opposite side of the board) adds much more surface area for heat to escape into the surrounding air, and the enclosure design (vents, fans, or simply enough open internal volume) determines how effectively that heat then escapes the product entirely.</p>',
+  12
+),
+(
+  (SELECT id FROM courses WHERE slug = 'pcb-design'),
+  'component-placement-strategy',
+  'Component Placement Strategy',
+  '<h3>Placement comes before routing</h3>
+  <p>Good placement makes routing dramatically easier; poor placement can make a board nearly impossible to route cleanly no matter how skilled the routing that follows. Placement is typically the first layout step, done deliberately, rather than left to whatever order components happened to be dropped onto the board.</p>
+
+  <h3>Functional grouping</h3>
+  <p>Related components -- a microcontroller and its decoupling capacitors, a power regulator and its input/output capacitors and inductor, a connector and its associated protection components -- should be placed physically close together, in roughly the same order signals flow between them, minimizing the length (and therefore the resistance, inductance, and noise pickup) of the connections between them.</p>
+
+  <h3>Orientation consistency</h3>
+  <p>Placing similar components (e.g. a row of identical decoupling capacitors, or a bank of LEDs) with consistent orientation makes the board easier to visually inspect and assemble correctly, and specifically helps automated optical inspection (AOI) machines catch a misplaced or backward part during production.</p>
+
+  <h3>Keep-out zones and mechanical constraints</h3>
+  <table class="data-table">
+    <caption>Common mechanical placement constraints</caption>
+    <thead><tr><th>Constraint</th><th>Why it exists</th></tr></thead>
+    <tbody>
+      <tr><td>Mounting hole keep-out</td><td>Nothing should overlap a screw, standoff, or the metal washer/head around it</td></tr>
+      <tr><td>Connector edge clearance</td><td>Cable connectors need clear access from the board edge, plus enough space for the mating cable/plug body itself</td></tr>
+      <tr><td>Enclosure height clearance</td><td>Tall components (electrolytic capacitors, connectors, inductors) must fit within the available vertical space inside the enclosure</td></tr>
+      <tr><td>User-facing component alignment</td><td>Connectors, switches, LEDs, and displays that reach the enclosure&prime;s surface must line up precisely with cutouts in the enclosure design</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Iterating with mechanical design</h3>
+  <p>Placement rarely gets finalized in isolation -- it typically goes through several rounds of feedback with whoever is designing the enclosure or mechanical assembly, since a placement that looks fine electrically can still turn out to conflict with the physical product design.</p>',
+  13
 ),
 (
   (SELECT id FROM courses WHERE slug = 'pcb-design'),
@@ -1749,7 +2111,123 @@ INSERT INTO lessons (course_id, slug, title, content, sort_order) VALUES
   <h3>Output files</h3>
   <p>Once layout is complete, the design is exported as a set of manufacturing files, most commonly <strong>Gerber files</strong> (one per copper/mask/silkscreen layer) plus an <strong>NC drill file</strong> and a <strong>bill of materials (BOM)</strong> and <strong>pick-and-place file</strong> for assembly.</p>
   <p>Panelization -- arranging multiple copies of a board together with breakaway tabs -- is also commonly done at this stage to make assembly more efficient.</p>',
-  3
+  14
+),
+(
+  (SELECT id FROM courses WHERE slug = 'pcb-design'),
+  'design-for-assembly-and-soldering',
+  'Design for Assembly & Soldering',
+  '<h3>Reflow vs. wave soldering</h3>
+  <table class="data-table">
+    <caption>Reflow vs. wave soldering</caption>
+    <thead><tr><th>Process</th><th>How it works</th><th>Best suited for</th></tr></thead>
+    <tbody>
+      <tr><td>Reflow soldering</td><td>Solder paste is printed onto pads, components are placed into the wet paste, then the whole board is heated through a temperature profile that melts the paste and solders every joint at once</td><td>SMD components, including boards with SMD on both sides</td></tr>
+      <tr><td>Wave soldering</td><td>The underside of a populated board passes over a standing wave of molten solder, which wicks up through drilled holes into the joint</td><td>Through-hole components, often after SMD parts are already reflow-soldered on the other side</td></tr>
+    </tbody>
+  </table>
+
+  <h3>The reflow temperature profile</h3>
+  <p>A reflow profile has several distinct phases: a gradual preheat (avoiding thermal shock to components), a soak (equalizing temperature across the whole board), a reflow peak (briefly exceeding the solder paste&prime;s melting point to form the joints), and a controlled cooldown. Getting this profile wrong -- heating too fast, not reaching a high enough peak, or cooling too abruptly -- is a common cause of cold solder joints, tombstoning, or thermally damaged components.</p>
+
+  <h3>Pick-and-place considerations</h3>
+  <p>Automated pick-and-place machines need fiducial markers -- small, precisely located copper reference dots -- to calibrate their exact position relative to the board before placing fine-pitch components. Component footprints and orientations should also follow the design tool&prime;s and fabricator&prime;s standard conventions, since an inconsistent or non-standard footprint can prevent automated placement entirely, forcing manual assembly.</p>
+
+  <h3>Panelization</h3>
+  <p>Rather than running boards through assembly one at a time, multiple copies of a board (or several different boards) are commonly arranged together into one larger panel connected by breakaway tabs or v-score cuts, assembled together, and then separated afterward -- reducing handling time and making small boards practical to run through automated equipment sized for larger panels.</p>
+
+  <h3>Design-for-assembly checklist highlights</h3>
+  <ul>
+    <li>Leave adequate spacing between components for the pick-and-place nozzle and for solder paste stencil openings not to bridge between neighboring pads.</li>
+    <li>Avoid placing tall components where they would block a shorter component during automated placement or inspection.</li>
+    <li>Keep consistent component orientation where practical, as covered in the Component Placement Strategy lesson.</li>
+    <li>Confirm polarized components (diodes, electrolytic capacitors, ICs) have clear, unambiguous silkscreen orientation markings.</li>
+  </ul>',
+  15
+),
+(
+  (SELECT id FROM courses WHERE slug = 'pcb-design'),
+  'bill-of-materials-and-sourcing',
+  'Bill of Materials & Sourcing',
+  '<h3>What a BOM is</h3>
+  <p>A Bill of Materials (BOM) lists every part needed to build one unit of a board: reference designator, quantity, manufacturer part number, description, and footprint -- the document that turns a design into something that can actually be purchased and assembled.</p>
+
+  <h3>Structuring a good BOM</h3>
+  <table class="data-table">
+    <caption>Key BOM fields</caption>
+    <thead><tr><th>Field</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>Reference designator(s)</td><td>Which specific position(s) on the board this line applies to (e.g. R1, R5, R12)</td></tr>
+      <tr><td>Manufacturer part number (MPN)</td><td>The exact, specific part to buy -- not just a generic value like "10k resistor"</td></tr>
+      <tr><td>Footprint</td><td>Confirms the part&prime;s physical package matches what the layout expects</td></tr>
+      <tr><td>Approved alternates</td><td>One or more substitute parts, pre-vetted as electrically and mechanically compatible, in case the primary part is unavailable</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Component sourcing and lifecycle</h3>
+  <p>Before committing a design to production, it is worth checking each component&prime;s stock availability, lead time, and lifecycle status (active, not recommended for new designs, or discontinued) with distributors -- a design built entirely around a part that is discontinued shortly after release can force a costly redesign, so designers commonly favor parts with a clear, long-term manufacturer commitment, especially for anything expected to stay in production for years.</p>
+
+  <h3>Footprint and BOM cross-checking</h3>
+  <p>A BOM and a schematic/layout can drift out of sync during a design&prime;s revisions -- a component value changed in the schematic but not updated in the BOM (or vice versa) is a common, easy-to-miss error. Most modern PCB design tools can generate the BOM directly from the schematic&prime;s component data, which keeps the two in sync automatically as long as the schematic itself stays current.</p>',
+  16
+),
+(
+  (SELECT id FROM courses WHERE slug = 'pcb-design'),
+  'pcb-testing-and-bring-up',
+  'PCB Testing & Bring-Up',
+  '<h3>Bare-board electrical testing</h3>
+  <p>Before any components are even assembled, a fabricated bare board can be tested for basic manufacturing defects using a flying probe tester (which moves a small number of test probes around to check connectivity and isolation between nets) or, for high-volume production, a dedicated bed-of-nails fixture -- both checking that every net that should be connected is connected, and every net that should be isolated actually is.</p>
+
+  <h3>In-circuit test (ICT)</h3>
+  <p>After assembly, in-circuit test uses a similar bed-of-nails fixture to probe individual component values and connections directly on the populated board, catching wrong, missing, or backward components before the board is powered on -- much cheaper to find at this stage than after a finished product fails in the field.</p>
+
+  <h3>Boundary scan (JTAG)</h3>
+  <p>Modern digital ICs increasingly support boundary scan (an IEEE standard commonly called JTAG), where a chain of internal test cells lets external test equipment control and read every pin of a chip without needing physical probe access to each individual pin -- especially valuable for dense boards using fine-pitch or BGA packages, where a bed-of-nails fixture cannot physically reach every net.</p>
+
+  <h3>First-power bring-up methodology</h3>
+  <ol>
+    <li>Before applying any power, visually inspect the board for solder bridges, missing components, and obviously wrong component values or orientations.</li>
+    <li>Check for shorts between power and ground with a multimeter (with power still off) before powering up for the first time.</li>
+    <li>Bring up power through a current-limited bench supply rather than a normal fixed supply, so a design fault trips a current limit instead of releasing smoke.</li>
+    <li>Verify each supply voltage at its intended point before enabling any downstream circuitry that depends on it.</li>
+    <li>Bring up subsystems incrementally -- power, then a microcontroller and its clock, then peripherals one at a time -- rather than expecting a fully populated, fully complex board to work correctly the very first time everything is powered together.</li>
+  </ol>
+  <p>This mirrors the same incremental-testing philosophy the Robotics course recommends for bringing up a new robot -- confirm each piece works in isolation before trusting the fully assembled system.</p>',
+  17
+),
+(
+  (SELECT id FROM courses WHERE slug = 'pcb-design'),
+  'pcb-design-software-and-workflow',
+  'PCB Design Software & Workflow',
+  '<h3>Common PCB design tools</h3>
+  <table class="data-table">
+    <caption>Widely used PCB design packages</caption>
+    <thead><tr><th>Tool</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>KiCad</td><td>Free and open-source, widely used by hobbyists and increasingly by professionals; includes schematic capture, layout, a 3D viewer, and Gerber/BOM export</td></tr>
+      <tr><td>Altium Designer</td><td>A widely used commercial professional tool, common in industry for complex, high-layer-count designs</td></tr>
+      <tr><td>Eagle</td><td>A long-established tool, historically popular with hobbyists, now distributed as part of Autodesk Fusion</td></tr>
+      <tr><td>OrCAD</td><td>A long-established commercial tool, common in some industrial and enterprise settings</td></tr>
+    </tbody>
+  </table>
+  <p>All of these tools implement the same fundamental workflow covered throughout this course -- schematic capture, ERC, layout, DRC, and manufacturing output generation -- differing mainly in interface, cost, and advanced feature sets rather than in the underlying design process.</p>
+
+  <h3>The end-to-end workflow, tied together</h3>
+  <ol>
+    <li>Capture the schematic and run ERC (Schematic Capture lesson).</li>
+    <li>Choose footprints and packages for every component (Component Footprints & Packages lesson).</li>
+    <li>Define the layer stack-up and design rules to match the intended fabricator (Layer Stack-Ups and Design Rules & DRC lessons).</li>
+    <li>Place components with functional grouping and mechanical constraints in mind (Component Placement Strategy lesson).</li>
+    <li>Route the board, respecting power/ground plane, signal integrity, and thermal considerations (PCB Layout & Routing, Power Distribution & Decoupling, Signal Integrity Basics, and Thermal Management lessons).</li>
+    <li>Run DRC, fix every violation, and review the board thoroughly before release.</li>
+    <li>Generate manufacturing outputs and check DFM and assembly considerations (Design for Manufacturing and Design for Assembly & Soldering lessons).</li>
+    <li>Finalize and cross-check the BOM (Bill of Materials & Sourcing lesson).</li>
+    <li>Fabricate, assemble, and bring the board up methodically (PCB Testing & Bring-Up lesson).</li>
+  </ol>
+
+  <h3>Version control for hardware</h3>
+  <p>Unlike pure software, a PCB design cannot be meaningfully "diffed" line-by-line the way source code can, but the same underlying discipline still applies: keeping every design file in a version control system (even one built for text, like Git, since most PCB tools now use text-based file formats), tagging released revisions clearly, and never editing a design that has already been sent to fabrication without creating a new, clearly labeled revision.</p>',
+  18
 )
 ON DUPLICATE KEY UPDATE
   title = VALUES(title),
