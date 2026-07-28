@@ -156,6 +156,207 @@ INSERT INTO lessons (course_id, slug, title, content, sort_order) VALUES
 ),
 (
   (SELECT id FROM courses WHERE slug = 'digital-logic-design'),
+  'binary-arithmetic-signed-numbers',
+  'Binary Arithmetic & Signed Numbers',
+  '<h3>Binary addition</h3>
+  <p>Binary addition follows the same place-value rules as decimal addition, but with only two digits. There are four possible single-bit cases:</p>
+  <table class="truth-table">
+    <caption>Single-bit binary addition</caption>
+    <thead><tr><th>A</th><th>B</th><th>Sum</th><th>Carry</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><td>0</td><td>1</td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><td>0</td><td>1</td></tr>
+    </tbody>
+  </table>
+  <p>Multi-bit numbers are added column by column, carrying into the next column just like decimal addition:</p>
+  <pre><code>  1011   (11)
++ 0110   ( 6)
+------
+  10001  (17)</code></pre>
+
+  <h3>Representing negative numbers: complements</h3>
+  <p>Digital systems have no separate minus-sign wire, so negative numbers are encoded using complements.</p>
+  <table class="data-table">
+    <caption>Complement systems for an n-bit number N</caption>
+    <thead><tr><th>System</th><th>Rule</th><th>Example (4-bit, N = 0110)</th></tr></thead>
+    <tbody>
+      <tr><td>1&prime;s complement</td><td>Flip every bit</td><td>0110 &rarr; 1001</td></tr>
+      <tr><td>2&prime;s complement</td><td>Flip every bit, then add 1</td><td>0110 &rarr; 1001 + 1 = 1010</td></tr>
+    </tbody>
+  </table>
+  <p>Two&prime;s complement is what almost all real hardware uses, because it has a single representation for zero and turns subtraction into addition.</p>
+
+  <h3>Two&prime;s complement representation</h3>
+  <p>In an n-bit two&prime;s complement number, the most significant bit (MSB) is a sign bit: 0 means positive, 1 means negative. To negate a number, take its two&prime;s complement.</p>
+  <table class="data-table">
+    <caption>4-bit two&prime;s complement range</caption>
+    <thead><tr><th>Bits</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>0111</td><td>+7 (largest positive)</td></tr>
+      <tr><td>0000</td><td>0</td></tr>
+      <tr><td>1111</td><td>-1</td></tr>
+      <tr><td>1000</td><td>-8 (largest negative)</td></tr>
+    </tbody>
+  </table>
+  <p>An n-bit two&prime;s complement number ranges from -2^(n-1) to +2^(n-1)-1.</p>
+
+  <h3>Subtraction using two&prime;s complement</h3>
+  <p>A - B is computed as A + (two&prime;s complement of B), discarding any carry out of the MSB:</p>
+  <pre><code>A = 0110 (6)
+B = 0011 (3)
+two''s complement of B = 1101
+
+  0110
++ 1101
+------
+ 10011  -&gt; discard the leading carry -&gt; 0011 (3) = 6 - 3</code></pre>
+
+  <h3>Overflow</h3>
+  <p>Overflow occurs when adding two numbers with the same sign produces a result with the opposite sign -- meaning the true result did not fit in the available bits. Hardware detects this by comparing the carry into the sign bit with the carry out of the sign bit: if they differ, overflow occurred.</p>
+
+  <h3>Binary-coded decimal (BCD)</h3>
+  <p>BCD encodes each decimal digit (0-9) separately in 4 bits, rather than converting the whole number to pure binary. It wastes some bit patterns (1010-1111 are unused) but makes conversion to and from human-readable decimal trivial -- useful for displays and calculators.</p>
+  <table class="data-table">
+    <caption>BCD examples</caption>
+    <thead><tr><th>Decimal</th><th>BCD</th></tr></thead>
+    <tbody>
+      <tr><td>9</td><td>1001</td></tr>
+      <tr><td>23</td><td>0010 0011</td></tr>
+      <tr><td>99</td><td>1001 1001</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Gray code</h3>
+  <p>Gray code orders binary patterns so that only one bit changes between consecutive values, which avoids glitches when a counter or sensor value is read while it is changing. It is widely used in rotary encoders and in Karnaugh map layouts.</p>
+  <table class="data-table">
+    <caption>3-bit binary vs. Gray code</caption>
+    <thead><tr><th>Decimal</th><th>Binary</th><th>Gray code</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>000</td><td>000</td></tr>
+      <tr><td>1</td><td>001</td><td>001</td></tr>
+      <tr><td>2</td><td>010</td><td>011</td></tr>
+      <tr><td>3</td><td>011</td><td>010</td></tr>
+      <tr><td>4</td><td>100</td><td>110</td></tr>
+      <tr><td>5</td><td>101</td><td>111</td></tr>
+      <tr><td>6</td><td>110</td><td>101</td></tr>
+      <tr><td>7</td><td>111</td><td>100</td></tr>
+    </tbody>
+  </table>',
+  2
+),
+(
+  (SELECT id FROM courses WHERE slug = 'digital-logic-design'),
+  'boolean-algebra-basics',
+  'Boolean Algebra Basics',
+  '<h3>What Boolean algebra is</h3>
+  <p>Boolean algebra is a mathematical system, introduced by George Boole and later applied to switching circuits by Claude Shannon, that works with variables which can only take one of two values: 0 (false) and 1 (true). It gives a formal way to write, manipulate, and simplify the same logic that a truth table or a gate diagram describes.</p>
+
+  <h3>The three basic operations</h3>
+  <table class="data-table">
+    <caption>Boolean operations and their notations</caption>
+    <thead><tr><th>Operation</th><th>Also called</th><th>Common notations</th><th>Gate equivalent</th></tr></thead>
+    <tbody>
+      <tr><td>Complement</td><td>NOT, inversion</td><td>A&prime;, &not;A, an overbar over A</td><td>NOT gate</td></tr>
+      <tr><td>Logical product</td><td>AND, conjunction</td><td>A &middot; B, AB, A &and; B</td><td>AND gate</td></tr>
+      <tr><td>Logical sum</td><td>OR, disjunction</td><td>A + B, A &or; B</td><td>OR gate</td></tr>
+    </tbody>
+  </table>
+  <p>Despite the "+" and "&middot;" symbols borrowed from ordinary algebra, Boolean addition and multiplication do <strong>not</strong> behave exactly like arithmetic -- most importantly, 1 + 1 = 1, not 2, because the result can only ever be 0 or 1.</p>
+
+  <h3>Operator precedence</h3>
+  <p>Just like arithmetic, Boolean expressions have an order of operations: complement first, then AND, then OR (parentheses override this order). For example:</p>
+  <pre><code>F = A + B &middot; C&prime;</code></pre>
+  <p>is evaluated as A OR (B AND (NOT C)), not (A OR B) AND (NOT C).</p>
+
+  <h3>Three equivalent descriptions of the same logic</h3>
+  <p>Any Boolean function can be described in three completely equivalent ways -- a truth table, a Boolean expression, and a gate-level logic diagram -- and a good digital designer moves freely between all three.</p>
+  <table class="truth-table">
+    <caption>Example function F = A&prime;B + AB&prime; (this is exclusive OR)</caption>
+    <thead><tr><th>A</th><th>B</th><th>F</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0</td><td>0</td></tr>
+      <tr><td>0</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>0</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>0</td></tr>
+    </tbody>
+  </table>
+  <p>A literal is a single variable or its complement (e.g. A or A&prime;). A product term (like A&prime;B) is a set of literals ANDed together, and a sum-of-products expression is several product terms ORed together.</p>',
+  3
+),
+(
+  (SELECT id FROM courses WHERE slug = 'digital-logic-design'),
+  'laws-of-boolean-algebra',
+  'Laws of Boolean Algebra',
+  '<h3>Why the laws matter</h3>
+  <p>The laws of Boolean algebra let a designer rewrite an expression into an equivalent -- but simpler, or more convenient -- form without building a truth table every time. They are the algebraic toolkit used to minimize a circuit before laying out gates.</p>
+
+  <h3>Basic identities</h3>
+  <table class="data-table">
+    <caption>Identity, null, idempotent, and complement laws</caption>
+    <thead><tr><th>Law</th><th>AND form</th><th>OR form</th></tr></thead>
+    <tbody>
+      <tr><td>Identity</td><td>A &middot; 1 = A</td><td>A + 0 = A</td></tr>
+      <tr><td>Null / Dominance</td><td>A &middot; 0 = 0</td><td>A + 1 = 1</td></tr>
+      <tr><td>Idempotent</td><td>A &middot; A = A</td><td>A + A = A</td></tr>
+      <tr><td>Complement</td><td>A &middot; A&prime; = 0</td><td>A + A&prime; = 1</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Involution (double complement):</strong> (A&prime;)&prime; = A -- inverting twice returns the original value.</p>
+
+  <h3>Commutative and associative laws</h3>
+  <table class="data-table">
+    <caption>Commutative and associative laws</caption>
+    <thead><tr><th>Law</th><th>AND form</th><th>OR form</th></tr></thead>
+    <tbody>
+      <tr><td>Commutative</td><td>AB = BA</td><td>A + B = B + A</td></tr>
+      <tr><td>Associative</td><td>(AB)C = A(BC)</td><td>(A + B) + C = A + (B + C)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Distributive and absorption laws</h3>
+  <table class="data-table">
+    <caption>Distributive and absorption laws</caption>
+    <thead><tr><th>Law</th><th>Statement</th></tr></thead>
+    <tbody>
+      <tr><td>Distributive</td><td>A(B + C) = AB + AC</td></tr>
+      <tr><td>Distributive (dual)</td><td>A + BC = (A + B)(A + C)</td></tr>
+      <tr><td>Absorption</td><td>A + AB = A</td></tr>
+      <tr><td>Absorption (variant)</td><td>A(A + B) = A</td></tr>
+      <tr><td>Absorption (variant 2)</td><td>A + A&prime;B = A + B</td></tr>
+    </tbody>
+  </table>
+  <p>Absorption is one of the most useful simplification tools -- it lets you eliminate a redundant term that is already covered by a simpler one.</p>
+
+  <h3>Consensus (redundancy) theorem</h3>
+  <pre><code>AB + A&prime;C + BC = AB + A&prime;C</code></pre>
+  <p>The term BC is the "consensus" of AB and A&prime;C (formed by combining the non-complementary variables of two terms that contain a variable and its complement). It is always redundant algebraically and can be dropped -- though, as the timing lesson later in this course shows, that exact redundant term is sometimes deliberately kept in real hardware to prevent a glitch.</p>
+
+  <h3>De Morgan&prime;s theorems</h3>
+  <table class="data-table">
+    <caption>De Morgan&prime;s theorems</caption>
+    <thead><tr><th>Form</th><th>Statement</th><th>In words</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>(A + B)&prime; = A&prime; &middot; B&prime;</td><td>NOT of an OR = AND of the NOTs</td></tr>
+      <tr><td>2</td><td>(A &middot; B)&prime; = A&prime; + B&prime;</td><td>NOT of an AND = OR of the NOTs</td></tr>
+    </tbody>
+  </table>
+  <p>De Morgan&prime;s theorems are the reason NAND and NOR gates are "universal" -- they let you convert freely between AND/OR/NOT combinations, which is essential for implementing a design using only NAND gates or only NOR gates.</p>
+
+  <h3>The principle of duality</h3>
+  <p>Every Boolean identity has a "dual," formed by swapping AND &harr; OR and 0 &harr; 1 everywhere. For example, the dual of A + A&prime;B = A + B is A(A&prime; + B) = AB. This is why the laws above are almost always listed in AND/OR pairs.</p>
+
+  <h3>Worked simplification example</h3>
+  <pre><code>F = AB + AB&prime; + A&prime;B
+  = A(B + B&prime;) + A&prime;B      (distributive)
+  = A &middot; 1 + A&prime;B          (complement law)
+  = A + A&prime;B                 (identity law)
+  = A + B                     (absorption variant 2)</code></pre>',
+  4
+),
+(
+  (SELECT id FROM courses WHERE slug = 'digital-logic-design'),
   'logic-gates',
   'Logic Gates',
   '<h3>The basic gates</h3>
@@ -243,18 +444,454 @@ INSERT INTO lessons (course_id, slug, title, content, sort_order) VALUES
     </tbody>
   </table>
 
-  <p>NAND and NOR are called "universal gates" because either one, alone, can be wired together to build any other gate -- which is why they are so common inside real chips.</p>',
-  2
+  <p>NAND and NOR are called "universal gates" because either one, alone, can be wired together to build any other gate -- which is why they are so common inside real chips.</p>
+
+  <h3>Buffers and tri-state buffers</h3>
+  <p>A buffer is a one-input, one-output gate whose truth table is simply OUT = A -- it does not change the logic value at all. Its purpose is entirely practical: it restores signal strength and drive current on a long wire or a wire feeding many other gates (a "high fan-out" wire).</p>
+  <p>A tri-state buffer adds a third possible output state, high-impedance (<strong>Z</strong>), controlled by an enable input. When disabled, the output floats and does not affect the wire it is connected to -- essential for building shared buses where several devices take turns driving the same line.</p>
+  <table class="truth-table">
+    <caption>Tri-state buffer</caption>
+    <thead><tr><th>EN</th><th>A</th><th>OUT</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>X</td><td>Z (high-impedance / disconnected)</td></tr>
+      <tr><td>1</td><td>0</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Building any gate from NAND only</h3>
+  <table class="data-table">
+    <caption>Gate constructions using only NAND gates</caption>
+    <thead><tr><th>Gate wanted</th><th>NAND-only construction</th></tr></thead>
+    <tbody>
+      <tr><td>NOT A</td><td>NAND(A, A)</td></tr>
+      <tr><td>A AND B</td><td>NAND(X, X), where X = NAND(A, B)</td></tr>
+      <tr><td>A OR B</td><td>NAND(NAND(A,A), NAND(B,B))</td></tr>
+      <tr><td>A NOR B</td><td>NAND(Y, Y), where Y = NAND(NAND(A,A), NAND(B,B)) is A OR B</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Building any gate from NOR only</h3>
+  <table class="data-table">
+    <caption>Gate constructions using only NOR gates</caption>
+    <thead><tr><th>Gate wanted</th><th>NOR-only construction</th></tr></thead>
+    <tbody>
+      <tr><td>NOT A</td><td>NOR(A, A)</td></tr>
+      <tr><td>A OR B</td><td>NOR(X, X), where X = NOR(A, B)</td></tr>
+      <tr><td>A AND B</td><td>NOR(NOR(A,A), NOR(B,B))</td></tr>
+    </tbody>
+  </table>
+  <p>This substitution matters in real chip fabrication: NAND and NOR gates built from CMOS transistors are simpler and faster than AND/OR gates (an AND gate is actually a NAND gate followed by an internal inverter), so digital designs are usually mapped internally onto NAND/NOR networks.</p>
+
+  <h3>Fan-in and multiple-input gates</h3>
+  <p>AND, OR, NAND, NOR, XOR, and XNOR all generalize naturally to more than two inputs -- for example, a 4-input AND gate outputs 1 only when all four inputs are 1. The number of inputs a gate accepts is called its <strong>fan-in</strong>. XOR and XNOR generalize as odd/even parity functions rather than "exactly one input is 1": a multi-input XOR outputs 1 when an odd number of its inputs are 1.</p>',
+  5
+),
+(
+  (SELECT id FROM courses WHERE slug = 'digital-logic-design'),
+  'canonical-forms-sop-pos',
+  'Canonical Forms: SOP & POS',
+  '<h3>Minterms and maxterms</h3>
+  <p>For a function of n variables, a <strong>minterm</strong> is a product (AND) term that includes every variable exactly once, either true or complemented, so that it equals 1 for exactly one row of the truth table. A <strong>maxterm</strong> is the dual: a sum (OR) term that includes every variable exactly once, and equals 0 for exactly one row.</p>
+  <table class="truth-table">
+    <caption>Minterms and maxterms for two variables A, B</caption>
+    <thead><tr><th>A</th><th>B</th><th>Minterm</th><th>Notation</th><th>Maxterm</th><th>Notation</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0</td><td>A&prime;B&prime;</td><td>m0</td><td>A + B</td><td>M0</td></tr>
+      <tr><td>0</td><td>1</td><td>A&prime;B</td><td>m1</td><td>A + B&prime;</td><td>M1</td></tr>
+      <tr><td>1</td><td>0</td><td>AB&prime;</td><td>m2</td><td>A&prime; + B</td><td>M2</td></tr>
+      <tr><td>1</td><td>1</td><td>AB</td><td>m3</td><td>A&prime; + B&prime;</td><td>M3</td></tr>
+    </tbody>
+  </table>
+  <p>The minterm/maxterm index is simply the input combination for that row, read as a binary number.</p>
+
+  <h3>Canonical sum-of-products (SOP)</h3>
+  <p>Any Boolean function can be written as the OR of the minterms for every row where the output is 1. This is the <strong>canonical SOP</strong> (or "standard SOP") form.</p>
+  <table class="truth-table">
+    <caption>Example function F(A,B,C)</caption>
+    <thead><tr><th>A</th><th>B</th><th>C</th><th>F</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+      <tr><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+      <tr><td>0</td><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><td>0</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td><td>1</td></tr>
+    </tbody>
+  </table>
+  <pre><code>F(A,B,C) = A&prime;B&prime;C + A&prime;BC + ABC&prime; + ABC
+         = m1 + m3 + m6 + m7
+         = &Sigma;m(1, 3, 6, 7)</code></pre>
+
+  <h3>Canonical product-of-sums (POS)</h3>
+  <p>The same function can equally be written as the AND of the maxterms for every row where the output is 0 -- the <strong>canonical POS</strong> form.</p>
+  <pre><code>F(A,B,C) = (A + B + C)(A + B&prime; + C)(A&prime; + B + C)(A&prime; + B + C&prime;)
+         = M0 &middot; M2 &middot; M4 &middot; M5
+         = &prod;M(0, 2, 4, 5)</code></pre>
+  <p>Notice SOP uses the rows where F = 1 and POS uses the rows where F = 0 -- the two forms are complementary views of the exact same truth table.</p>
+
+  <h3>Converting between SOP and POS</h3>
+  <p>Given the canonical SOP as &Sigma;m(...), the maxterm indices for the POS form are simply all the indices <em>not</em> in that list, with De Morgan&prime;s theorem justifying the switch between AND and OR. Canonical forms are rarely the most efficient circuit to actually build -- the next lesson covers how to minimize them.</p>',
+  6
+),
+(
+  (SELECT id FROM courses WHERE slug = 'digital-logic-design'),
+  'karnaugh-maps',
+  'Karnaugh Maps & Minimization',
+  '<h3>Why Karnaugh maps</h3>
+  <p>Algebraic simplification works, but it is easy to miss a possible simplification by hand. A Karnaugh map (K-map) rearranges a truth table into a grid where physically adjacent cells differ by exactly one bit, so the groups you can simplify are visually obvious as rectangular blocks of 1s.</p>
+
+  <h3>2-variable K-map</h3>
+  <pre><code>        B=0   B=1
+A=0      m0    m1
+A=1      m2    m3</code></pre>
+
+  <h3>3-variable K-map</h3>
+  <p>The column headings are ordered in Gray code (00, 01, 11, 10) rather than plain binary, specifically so that adjacent columns -- including the wraparound from the last column back to the first -- differ by only one bit.</p>
+  <pre><code>          BC=00  BC=01  BC=11  BC=10
+A=0        m0     m1     m3     m2
+A=1        m4     m5     m7     m6</code></pre>
+
+  <h3>4-variable K-map</h3>
+  <pre><code>            CD=00  CD=01  CD=11  CD=10
+AB=00        m0     m1     m3     m2
+AB=01        m4     m5     m7     m6
+AB=11        m12    m13    m15    m14
+AB=10        m8     m9     m11    m10</code></pre>
+
+  <h3>Grouping rules</h3>
+  <ul>
+    <li>Place a 1 in every cell whose minterm belongs to the function.</li>
+    <li>Circle groups of 1s whose size is a power of 2 (1, 2, 4, 8, 16 cells) -- never groups of 3, 5, 6, or 7.</li>
+    <li>Groups may wrap around the top/bottom edges and the left/right edges of the map (the grid behaves like a torus).</li>
+    <li>Make each group as large as possible, and use as few groups as possible while still covering every 1 at least once.</li>
+    <li>Each group becomes one product term in the minimized SOP: any variable that takes both 0 and 1 within the group drops out; any variable that stays constant across the group appears (true if it stayed 1, complemented if it stayed 0).</li>
+  </ul>
+
+  <h3>Worked example (4 variables)</h3>
+  <p>Minimize F(A,B,C,D) = &Sigma;m(0, 1, 2, 3, 8, 9, 10, 11) -- that is, F = 1 whenever the pair (A,B) equals 00 or 10, for any C, D.</p>
+  <pre><code>            CD=00  CD=01  CD=11  CD=10
+AB=00         1      1      1      1
+AB=01         0      0      0      0
+AB=11         0      0      0      0
+AB=10         1      1      1      1</code></pre>
+  <p>Rows AB=00 and AB=10 are both entirely 1, and (thanks to wraparound) they are adjacent to each other, forming one group of 8 cells in which only B stays constant, at 0:</p>
+  <pre><code>F = B&prime;</code></pre>
+
+  <h3>Do not care conditions</h3>
+  <p>Some input combinations may never actually occur (e.g. BCD digit codes 1010-1111), or their output may not matter for a given application. These are marked "X" (don&prime;t care) on the map. You are free to treat each X as a 0 or a 1, whichever helps form a larger group -- but you are never required to cover an X.</p>
+
+  <h3>Beyond four variables</h3>
+  <p>K-maps become hard to draw and read past five or six variables. For larger functions, the tabular <strong>Quine-McCluskey method</strong> performs the same "combine terms that differ by one bit" process algorithmically (and is the basis of automated logic minimization tools), followed by a prime-implicant selection step that picks the smallest covering set of terms.</p>',
+  7
+),
+(
+  (SELECT id FROM courses WHERE slug = 'digital-logic-design'),
+  'combinational-circuit-design',
+  'Combinational Circuit Design',
+  '<h3>What makes a circuit "combinational"</h3>
+  <p>A combinational circuit&prime;s outputs depend only on its current inputs, with no memory of the past. Every circuit covered in the next several lessons -- adders, multiplexers, decoders, comparators -- is combinational; sequential circuits (with memory) are covered later in this course.</p>
+
+  <h3>The standard design process</h3>
+  <ol>
+    <li><strong>Specify the problem</strong> in words, then translate it into a truth table listing every input combination and the required output(s).</li>
+    <li><strong>Derive a Boolean expression</strong> for each output, typically starting from the canonical SOP (or POS) form read directly off the truth table.</li>
+    <li><strong>Minimize</strong> the expression algebraically or with a Karnaugh map to reduce the gate count and the number of levels of logic.</li>
+    <li><strong>Draw the logic diagram</strong>, choosing gates that are actually available (e.g. only 2-input gates, or only NAND gates for a particular chip family).</li>
+    <li><strong>Verify</strong> the circuit against the original truth table, by hand or in simulation, before building or fabricating it.</li>
+  </ol>
+
+  <h3>Design trade-offs</h3>
+  <table class="data-table">
+    <caption>Common trade-offs in combinational design</caption>
+    <thead><tr><th>Trade-off</th><th>Why it matters</th></tr></thead>
+    <tbody>
+      <tr><td>Gate count vs. speed</td><td>Fewer levels of logic between input and output means shorter propagation delay, even at the cost of more gates</td></tr>
+      <tr><td>Fan-in limits</td><td>Real gates only accept a limited number of inputs; a 6-input AND may need to be built from smaller gates</td></tr>
+      <tr><td>Fan-out limits</td><td>A single gate output can only reliably drive a limited number of downstream gate inputs before needing a buffer</td></tr>
+      <tr><td>Reusability</td><td>Building from standard blocks (muxes, decoders, adders) is easier to design, verify, and reuse than one giant minimized expression</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Standard combinational building blocks</h3>
+  <p>In practice, digital designers rarely minimize truth tables by hand for anything but small examples -- most real designs are assembled from a toolbox of standard combinational blocks, each covered in its own lesson next:</p>
+  <table class="data-table">
+    <caption>Standard combinational blocks covered in this course</caption>
+    <thead><tr><th>Block</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>Adder / subtractor</td><td>Binary arithmetic</td></tr>
+      <tr><td>Multiplexer / demultiplexer</td><td>Route one of several signals; implement any truth table directly</td></tr>
+      <tr><td>Decoder / encoder</td><td>Convert between a binary code and a one-of-many activation signal</td></tr>
+      <tr><td>Comparator</td><td>Determine equality or ordering of two binary numbers</td></tr>
+      <tr><td>Parity generator/checker</td><td>Add simple error detection to transmitted or stored data</td></tr>
+    </tbody>
+  </table>',
+  8
+),
+(
+  (SELECT id FROM courses WHERE slug = 'digital-logic-design'),
+  'adders-and-subtractors',
+  'Adders & Subtractors',
+  '<h3>Half adder</h3>
+  <p>A half adder adds two single bits, producing a sum and a carry-out, but has no input for a carry from a previous stage.</p>
+  <table class="truth-table">
+    <caption>Half adder</caption>
+    <thead><tr><th>A</th><th>B</th><th>Sum</th><th>Cout</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><td>0</td><td>1</td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><td>0</td><td>1</td></tr>
+    </tbody>
+  </table>
+  <pre><code>Sum  = A &oplus; B
+Cout = A &middot; B</code></pre>
+  <p>A half adder is just one XOR gate and one AND gate.</p>
+
+  <h3>Full adder</h3>
+  <p>A full adder also accepts a carry-in, so full adders can be chained together to add numbers of any width.</p>
+  <table class="truth-table">
+    <caption>Full adder</caption>
+    <thead><tr><th>A</th><th>B</th><th>Cin</th><th>Sum</th><th>Cout</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><td>0</td><td>0</td><td>1</td><td>1</td><td>0</td></tr>
+      <tr><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+      <tr><td>0</td><td>1</td><td>1</td><td>0</td><td>1</td></tr>
+      <tr><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>0</td><td>1</td><td>0</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>0</td><td>0</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr>
+    </tbody>
+  </table>
+  <pre><code>Sum  = A &oplus; B &oplus; Cin
+Cout = AB + ACin + BCin</code></pre>
+  <p>A full adder can be built from two half adders: the first adds A and B, the second adds that result to Cin, and the two carry-outs are ORed together.</p>
+
+  <h3>Ripple-carry adder</h3>
+  <p>Chaining n full adders, with each stage&prime;s Cout feeding the next stage&prime;s Cin, builds an n-bit adder. It is called "ripple carry" because a carry generated at the least significant bit may have to propagate ("ripple") all the way to the most significant bit, making the worst-case delay grow with the number of bits -- the main drawback of this simple design.</p>
+
+  <h3>Carry-look-ahead adder</h3>
+  <p>A carry-look-ahead adder computes all the carries in parallel ahead of time instead of waiting for them to ripple through, trading extra gates for much lower delay on wide adders. For each bit position i, define:</p>
+  <pre><code>Pi = Ai &oplus; Bi          (carry "propagate")
+Gi = Ai &middot; Bi           (carry "generate")
+C(i+1) = Gi + Pi &middot; Ci     (carry out of stage i)</code></pre>
+  <p>Because each C(i+1) depends only on the original inputs (through the Gi, Pi, and lower carry terms) rather than on a chain of full adders, these expressions can be expanded and computed with only a few levels of logic.</p>
+
+  <h3>Half subtractor</h3>
+  <table class="truth-table">
+    <caption>Half subtractor (computes A - B)</caption>
+    <thead><tr><th>A</th><th>B</th><th>Diff</th><th>Borrow</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><td>0</td><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><td>0</td><td>0</td></tr>
+    </tbody>
+  </table>
+  <pre><code>Diff   = A &oplus; B
+Borrow = A&prime; &middot; B</code></pre>
+
+  <h3>Full subtractor</h3>
+  <p>Like a full adder, a full subtractor accepts a borrow-in (Bin) so subtractors can be chained across multiple bits.</p>
+  <pre><code>Diff = A &oplus; B &oplus; Bin
+Bout = A&prime;B + A&prime;Bin + BBin</code></pre>
+
+  <h3>Combined adder/subtractor circuit</h3>
+  <p>Rather than building separate adder and subtractor hardware, real ALUs use one ripple-carry adder plus a control line M: each B input is first XORed with M, and M also feeds the first carry-in. When M = 0, B passes through unchanged and the circuit adds; when M = 1, B is bitwise complemented and 1 is added via the carry-in, which is exactly the two&prime;s complement of B -- so the same adder now computes A - B.</p>
+
+  <h3>BCD adder</h3>
+  <p>Adding two BCD digits with a plain 4-bit binary adder can produce an invalid result (greater than 9) whenever there is a carry, since BCD only uses codes 0000-1001. A BCD adder detects this (a sum greater than 9, or a carry-out having occurred) and corrects it by adding 6 (0110) to force the result back into valid BCD and to generate the correct carry into the next decimal digit.</p>',
+  9
+),
+(
+  (SELECT id FROM courses WHERE slug = 'digital-logic-design'),
+  'multiplexers-demultiplexers',
+  'Multiplexers & Demultiplexers',
+  '<h3>Multiplexer (mux)</h3>
+  <p>A multiplexer selects one of several data inputs and routes it to a single output, based on the value of one or more select lines. A mux with n select lines can choose among 2^n data inputs.</p>
+  <table class="truth-table">
+    <caption>2-to-1 multiplexer</caption>
+    <thead><tr><th>S</th><th>Output Y</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>Y = A</td></tr>
+      <tr><td>1</td><td>Y = B</td></tr>
+    </tbody>
+  </table>
+  <pre><code>Y = S&prime;A + SB</code></pre>
+
+  <h3>4-to-1 multiplexer</h3>
+  <table class="truth-table">
+    <caption>4-to-1 multiplexer</caption>
+    <thead><tr><th>S1</th><th>S0</th><th>Output Y</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0</td><td>Y = D0</td></tr>
+      <tr><td>0</td><td>1</td><td>Y = D1</td></tr>
+      <tr><td>1</td><td>0</td><td>Y = D2</td></tr>
+      <tr><td>1</td><td>1</td><td>Y = D3</td></tr>
+    </tbody>
+  </table>
+  <pre><code>Y = S1&prime;S0&prime;D0 + S1&prime;S0D1 + S1S0&prime;D2 + S1S0D3</code></pre>
+  <p>Larger muxes are usually built as a tree of smaller ones -- for example, an 8-to-1 mux from two 4-to-1 muxes feeding a 2-to-1 mux.</p>
+
+  <h3>Multiplexers as universal function generators</h3>
+  <p>Feeding a function&prime;s input variables into the select lines of a mux, and hard-wiring each data input to 0 or 1 according to the truth table, lets a mux directly implement <em>any</em> truth table with no minimization needed at all -- a technique used inside programmable logic devices, covered later in this course.</p>
+
+  <h3>Demultiplexer (demux)</h3>
+  <p>A demultiplexer is the mirror image of a mux: it routes a single data input to one of several outputs, chosen by the select lines. All non-selected outputs are held at 0.</p>
+  <table class="truth-table">
+    <caption>1-to-4 demultiplexer</caption>
+    <thead><tr><th>S1</th><th>S0</th><th>Y0</th><th>Y1</th><th>Y2</th><th>Y3</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0</td><td>D</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><td>0</td><td>1</td><td>0</td><td>D</td><td>0</td><td>0</td></tr>
+      <tr><td>1</td><td>0</td><td>0</td><td>0</td><td>D</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>D</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Common applications</h3>
+  <table class="data-table">
+    <caption>Mux/demux applications</caption>
+    <thead><tr><th>Application</th><th>How it uses mux/demux</th></tr></thead>
+    <tbody>
+      <tr><td>Parallel-to-serial conversion</td><td>A mux with select lines driven by a counter samples each parallel bit in turn</td></tr>
+      <tr><td>Serial-to-parallel conversion</td><td>A demux with select lines driven by a counter distributes an incoming serial bit to the correct output latch</td></tr>
+      <tr><td>ALU operation select</td><td>A mux chooses which arithmetic/logic result becomes the ALU output based on the opcode</td></tr>
+      <tr><td>Memory addressing</td><td>A demux (in decoder form) activates exactly one memory row/word line for a given address</td></tr>
+    </tbody>
+  </table>',
+  10
+),
+(
+  (SELECT id FROM courses WHERE slug = 'digital-logic-design'),
+  'decoders-and-encoders',
+  'Decoders & Encoders',
+  '<h3>Binary decoder</h3>
+  <p>A decoder converts an n-bit binary code into one active output out of 2^n -- exactly one output line is asserted for each unique input combination.</p>
+  <table class="truth-table">
+    <caption>2-to-4 line decoder</caption>
+    <thead><tr><th>A1</th><th>A0</th><th>D0</th><th>D1</th><th>D2</th><th>D3</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+      <tr><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+    </tbody>
+  </table>
+  <pre><code>D0 = A1&prime;A0&prime;   D1 = A1&prime;A0   D2 = A1A0&prime;   D3 = A1A0</code></pre>
+  <p>Each output is simply one minterm of the inputs -- a decoder is really just a bank of AND gates, one per possible input combination. Larger decoders (3-to-8, 4-to-16, and so on) follow the same pattern and often add an enable input that gates all outputs at once, letting several decoders be chained to build a bigger one.</p>
+
+  <h3>Decoders and demultiplexers are the same circuit</h3>
+  <p>Add a single data input D that gates every AND term (so D0 = A1&prime;A0&prime;D, and so on), and a decoder becomes a demultiplexer. Commercial "decoder/demultiplexer" chips are usually sold as one part that can be used either way.</p>
+
+  <h3>BCD-to-seven-segment decoder</h3>
+  <p>A seven-segment display shows one decimal digit using seven LED segments labeled a-g. A BCD-to-seven-segment decoder converts a 4-bit BCD digit into the pattern of segments needed to display it.</p>
+  <table class="data-table">
+    <caption>BCD-to-seven-segment decoder (sample rows, 1 = segment on)</caption>
+    <thead><tr><th>Digit</th><th>BCD</th><th>a</th><th>b</th><th>c</th><th>d</th><th>e</th><th>f</th><th>g</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0000</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>0001</td><td>0</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><td>2</td><td>0010</td><td>1</td><td>1</td><td>0</td><td>1</td><td>1</td><td>0</td><td>1</td></tr>
+      <tr><td>8</td><td>1000</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr>
+    </tbody>
+  </table>
+  <p>Each segment (a through g) is its own combinational output, derived and minimized from the truth table the same way any other combinational output would be -- typically treating the six unused BCD codes (1010-1111) as don&prime;t cares.</p>
+
+  <h3>Encoder</h3>
+  <p>An encoder is the inverse of a decoder: it compresses one active input line, out of 2^n, back down into an n-bit binary code.</p>
+  <table class="truth-table">
+    <caption>4-to-2 line encoder</caption>
+    <thead><tr><th>D0</th><th>D1</th><th>D2</th><th>D3</th><th>A1</th><th>A0</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+      <tr><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+      <tr><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td><td>1</td></tr>
+    </tbody>
+  </table>
+  <p>A basic encoder like this is only well-defined when exactly one input is active at a time -- if two inputs are 1 simultaneously, the output is ambiguous.</p>
+
+  <h3>Priority encoder</h3>
+  <p>A priority encoder resolves that ambiguity by defining, for every input combination, which single active input "wins" -- typically the highest-numbered one -- and ignoring the rest.</p>
+  <table class="truth-table">
+    <caption>4-input priority encoder (D3 has highest priority; X = do not care)</caption>
+    <thead><tr><th>D3</th><th>D2</th><th>D1</th><th>D0</th><th>A1</th><th>A0</th><th>V (valid)</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>X</td><td>X</td><td>0</td></tr>
+      <tr><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td></tr>
+      <tr><td>0</td><td>0</td><td>1</td><td>X</td><td>0</td><td>1</td><td>1</td></tr>
+      <tr><td>0</td><td>1</td><td>X</td><td>X</td><td>1</td><td>0</td><td>1</td></tr>
+      <tr><td>1</td><td>X</td><td>X</td><td>X</td><td>1</td><td>1</td><td>1</td></tr>
+    </tbody>
+  </table>
+  <p>Priority encoders are the core of interrupt controllers (choosing which of several simultaneous interrupt requests to service first) and of keypad scanners.</p>',
+  11
+),
+(
+  (SELECT id FROM courses WHERE slug = 'digital-logic-design'),
+  'comparators-and-parity',
+  'Comparators & Parity Circuits',
+  '<h3>1-bit magnitude comparator</h3>
+  <table class="truth-table">
+    <caption>1-bit comparator</caption>
+    <thead><tr><th>A</th><th>B</th><th>A&gt;B</th><th>A=B</th><th>A&lt;B</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+      <tr><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td></tr>
+      <tr><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+    </tbody>
+  </table>
+  <pre><code>(A&gt;B) = AB&prime;
+(A=B) = AB + A&prime;B&prime;  =  (A XNOR B)
+(A&lt;B) = A&prime;B</code></pre>
+
+  <h3>Multi-bit magnitude comparator</h3>
+  <p>Comparing two n-bit numbers is done from the most significant bit down: the first bit position where A and B differ decides which number is larger, and if every bit position matches, the numbers are equal. Cascadable comparator chips implement this by taking the equality result of the higher-order bits as an enable for comparing the next lower-order bits, letting several comparator chips be chained to compare wider numbers.</p>
+  <p>Equality alone is often built more simply as a bitwise XNOR of every corresponding bit pair, ANDed together:</p>
+  <pre><code>(A = B) = (A3 XNOR B3) &middot; (A2 XNOR B2) &middot; (A1 XNOR B1) &middot; (A0 XNOR B0)</code></pre>
+
+  <h3>Parity generator</h3>
+  <p>Parity adds one extra bit to a group of data bits so that the total number of 1s (including the parity bit) is always even (even parity) or always odd (odd parity). It is the simplest possible error-detecting code.</p>
+  <table class="truth-table">
+    <caption>Even-parity generator for 3 data bits (sample rows)</caption>
+    <thead><tr><th>D2</th><th>D1</th><th>D0</th><th>P (parity bit)</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+      <tr><td>0</td><td>1</td><td>1</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td><td>1</td></tr>
+    </tbody>
+  </table>
+  <pre><code>P = D2 &oplus; D1 &oplus; D0</code></pre>
+  <p>An XOR tree naturally computes even parity (the output is 1 when an odd number of inputs are 1, which is exactly the bit needed to make the total even); inverting it with one more XNOR gives odd parity instead.</p>
+
+  <h3>Parity checker</h3>
+  <p>At the receiving end, a parity checker XORs all the received bits, including the parity bit itself. For even parity, the result should always be 0; a 1 means at least one bit was corrupted in transmission or storage.</p>
+  <table class="truth-table">
+    <caption>Even-parity checker for the transmitted group (D2, D1, D0, P)</caption>
+    <thead><tr><th>D2 &oplus; D1 &oplus; D0 &oplus; P</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>No error detected</td></tr>
+      <tr><td>1</td><td>Error detected (an odd number of bits flipped)</td></tr>
+    </tbody>
+  </table>
+  <p>Simple parity can only detect an <em>odd</em> number of bit errors -- if exactly two bits flip, the parity still checks out, which is why more robust systems use stronger codes such as checksums, CRCs, or Hamming codes to detect and even correct more error patterns.</p>',
+  12
 ),
 (
   (SELECT id FROM courses WHERE slug = 'digital-logic-design'),
   'flip-flops-sequential-logic',
-  'Flip-Flops & Sequential Logic',
+  'Latches & Flip-Flops',
   '<h3>Combinational vs. sequential logic</h3>
-  <p>Combinational logic (like the gates from the previous lesson) has outputs that depend only on the current inputs. Sequential logic has <strong>memory</strong> -- its outputs depend on current inputs and on past state. Flip-flops are the basic 1-bit memory elements used to build registers, counters, and state machines.</p>
+  <p>Combinational logic (like the gates and circuits from the previous lessons) has outputs that depend only on the current inputs. Sequential logic has <strong>memory</strong> -- its outputs depend on current inputs and on past state. Flip-flops and latches are the basic 1-bit memory elements used to build registers, counters, and state machines.</p>
 
   <h3>SR latch</h3>
-  <p>The simplest memory element. S (Set) and R (Reset) control the stored bit Q.</p>
+  <p>The simplest memory element, built from two cross-coupled NOR gates: each gate&prime;s output feeds back into the other gate&prime;s input. With both S and R held at 0, the feedback loop holds whichever state (Q = 0 or Q = 1) the latch was already in -- that feedback is exactly what gives the circuit memory. S (Set) and R (Reset) control the stored bit Q.</p>
   <table class="truth-table">
     <caption>SR latch behavior</caption>
     <thead><tr><th>S</th><th>R</th><th>Q (next)</th><th>Meaning</th></tr></thead>
@@ -265,6 +902,24 @@ INSERT INTO lessons (course_id, slug, title, content, sort_order) VALUES
       <tr><td>1</td><td>1</td><td>invalid</td><td>Not allowed</td></tr>
     </tbody>
   </table>
+
+  <h3>Gated D latch</h3>
+  <p>An SR latch is awkward to control directly because S = R = 1 is forbidden. A gated D latch fixes this by combining a single data input D with an enable input EN: whenever EN is 1, Q follows D; whenever EN is 0, Q holds its last value regardless of D. This removes the invalid state entirely and is the basis for how real flip-flops are built internally.</p>
+  <table class="truth-table">
+    <caption>Gated D latch</caption>
+    <thead><tr><th>EN</th><th>D</th><th>Q (next)</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>X</td><td>Q (hold)</td></tr>
+      <tr><td>1</td><td>0</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Latches vs. flip-flops</h3>
+  <p>A latch is <strong>level-triggered</strong>: its output can change any time its enable input is active. A flip-flop is <strong>edge-triggered</strong>: its output only changes at the instant of a clock edge (rising or falling), and is immune to input changes at every other time. Flip-flops are what almost all real synchronous digital systems use, because they let every part of a circuit change state at the same well-defined moment.</p>
+
+  <h3>Master-slave construction</h3>
+  <p>A common way to build an edge-triggered flip-flop is to chain two gated latches -- a "master" and a "slave" -- driven by opposite phases of the clock. While the clock is low, the master latch captures the input (the slave is frozen); when the clock goes high, the master freezes and the slave copies the master&prime;s value to the output. Because the master and slave are never both open at the same time, the output changes cleanly on one clock edge and cannot race with an input that is changing at the same time.</p>
 
   <h3>D flip-flop</h3>
   <p>The most widely used flip-flop. On every rising clock edge, it simply copies input D to output Q.</p>
@@ -278,7 +933,7 @@ INSERT INTO lessons (course_id, slug, title, content, sort_order) VALUES
   </table>
 
   <h3>JK flip-flop</h3>
-  <p>A more flexible flip-flop that fixes the SR latch''s invalid state by making both inputs high toggle the output.</p>
+  <p>A more flexible flip-flop that fixes the SR latch&prime;s invalid state by making both inputs high toggle the output.</p>
   <table class="truth-table">
     <caption>JK flip-flop behavior (on rising clock edge)</caption>
     <thead><tr><th>J</th><th>K</th><th>Q (next)</th><th>Meaning</th></tr></thead>
@@ -299,8 +954,289 @@ INSERT INTO lessons (course_id, slug, title, content, sort_order) VALUES
       <tr><td>0</td><td>Q (no change)</td></tr>
       <tr><td>1</td><td>NOT Q (toggle)</td></tr>
     </tbody>
-  </table>',
-  3
+  </table>
+
+  <h3>Characteristic equations</h3>
+  <p>Each flip-flop type has a characteristic equation describing its next state Q(next) as a function of its inputs and its current state Q:</p>
+  <table class="data-table">
+    <caption>Characteristic equations</caption>
+    <thead><tr><th>Flip-flop</th><th>Characteristic equation</th></tr></thead>
+    <tbody>
+      <tr><td>SR</td><td>Q(next) = S + R&prime;Q, with the restriction S &middot; R = 0</td></tr>
+      <tr><td>D</td><td>Q(next) = D</td></tr>
+      <tr><td>JK</td><td>Q(next) = JQ&prime; + K&prime;Q</td></tr>
+      <tr><td>T</td><td>Q(next) = T &oplus; Q</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Excitation tables</h3>
+  <p>When designing a sequential circuit, the current state Q and the required next state Q(next) are usually known, and the task is to work out what inputs will produce that transition -- the reverse direction from a characteristic table. An excitation table lists exactly that.</p>
+  <table class="truth-table">
+    <caption>JK flip-flop excitation table</caption>
+    <thead><tr><th>Q</th><th>Q(next)</th><th>J</th><th>K</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0</td><td>0</td><td>X</td></tr>
+      <tr><td>0</td><td>1</td><td>1</td><td>X</td></tr>
+      <tr><td>1</td><td>0</td><td>X</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>X</td><td>0</td></tr>
+    </tbody>
+  </table>
+  <table class="truth-table">
+    <caption>D and T flip-flop excitation tables</caption>
+    <thead><tr><th>Q</th><th>Q(next)</th><th>D</th><th>T</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+      <tr><td>0</td><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>0</td><td>0</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td><td>0</td></tr>
+    </tbody>
+  </table>
+  <p>Excitation tables are the key tool used later in this course to design counters and other state machines from flip-flops.</p>
+
+  <h3>Asynchronous preset and clear</h3>
+  <p>Most real flip-flop chips add two extra control inputs, Preset (or Set) and Clear (or Reset), which force Q to 1 or 0 immediately, independent of the clock -- used to force a circuit into a known starting state on power-up.</p>
+
+  <h3>Timing parameters</h3>
+  <table class="data-table">
+    <caption>Key flip-flop timing parameters</caption>
+    <thead><tr><th>Parameter</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>Setup time (t_su)</td><td>How long the input must be stable <em>before</em> the clock edge for it to be reliably captured</td></tr>
+      <tr><td>Hold time (t_h)</td><td>How long the input must remain stable <em>after</em> the clock edge</td></tr>
+      <tr><td>Propagation delay (t_pd / clock-to-Q)</td><td>How long after the clock edge it takes for Q to reflect the new value</td></tr>
+    </tbody>
+  </table>
+  <p>Violating setup or hold time can cause metastability -- the flip-flop output hovers between 0 and 1 for an unpredictable time before settling -- which is why real designs always leave timing margin, verified by static timing analysis, between when data arrives and when the next clock edge samples it.</p>',
+  13
+),
+(
+  (SELECT id FROM courses WHERE slug = 'digital-logic-design'),
+  'registers-and-shift-registers',
+  'Registers & Shift Registers',
+  '<h3>Registers</h3>
+  <p>A register is simply a group of flip-flops (commonly D flip-flops) sharing a common clock, used to store a multi-bit binary word. A basic parallel-load register loads all its bits simultaneously from a parallel data bus on one clock edge and holds that value until the next load.</p>
+
+  <h3>Shift registers</h3>
+  <p>A shift register is a chain of flip-flops where each stage&prime;s output feeds the next stage&prime;s input, so that on every clock edge the stored bits all shift one position, and a new bit enters at one end. Shift registers are classified by how data enters and leaves:</p>
+  <table class="data-table">
+    <caption>Shift register types</caption>
+    <thead><tr><th>Type</th><th>Data in</th><th>Data out</th><th>Typical use</th></tr></thead>
+    <tbody>
+      <tr><td>SISO (Serial-In, Serial-Out)</td><td>Serial</td><td>Serial</td><td>Fixed-length delay line</td></tr>
+      <tr><td>SIPO (Serial-In, Parallel-Out)</td><td>Serial</td><td>Parallel (all bits at once)</td><td>Serial-to-parallel conversion (e.g. receiving UART data)</td></tr>
+      <tr><td>PISO (Parallel-In, Serial-Out)</td><td>Parallel (loaded at once)</td><td>Serial</td><td>Parallel-to-serial conversion (e.g. transmitting UART data)</td></tr>
+      <tr><td>PIPO (Parallel-In, Parallel-Out)</td><td>Parallel</td><td>Parallel</td><td>Behaves as a simple buffer register</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Universal shift register</h3>
+  <p>A universal shift register combines all these modes into one chip, using a mode-select input to choose the operation performed on each clock edge.</p>
+  <table class="truth-table">
+    <caption>Universal shift register mode control (typical 2-bit mode select)</caption>
+    <thead><tr><th>S1</th><th>S0</th><th>Operation</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0</td><td>Hold (no change)</td></tr>
+      <tr><td>0</td><td>1</td><td>Shift right, new bit enters from the left</td></tr>
+      <tr><td>1</td><td>0</td><td>Shift left, new bit enters from the right</td></tr>
+      <tr><td>1</td><td>1</td><td>Parallel load</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Ring counter</h3>
+  <p>A ring counter is a shift register whose serial output is fed straight back into its serial input, so a single 1 (or a short pattern) circulates endlessly. An n-bit ring counter cycles through n unique states.</p>
+  <table class="data-table">
+    <caption>4-bit ring counter sequence (single 1 circulating)</caption>
+    <thead><tr><th>Clock</th><th>Q3 Q2 Q1 Q0</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>1 0 0 0</td></tr>
+      <tr><td>1</td><td>0 1 0 0</td></tr>
+      <tr><td>2</td><td>0 0 1 0</td></tr>
+      <tr><td>3</td><td>0 0 0 1</td></tr>
+      <tr><td>4</td><td>1 0 0 0 (repeats)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Johnson counter (twisted-ring counter)</h3>
+  <p>A Johnson counter is a ring counter with a twist: the <em>complement</em> of the last stage&prime;s output is fed back to the first stage, instead of the value directly. This doubles the number of unique states to 2n for an n-bit register, at the cost of the sequence being slightly less obviously "one bit at a time."</p>
+  <table class="data-table">
+    <caption>4-bit Johnson counter sequence</caption>
+    <thead><tr><th>Clock</th><th>Q3 Q2 Q1 Q0</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0 0 0 0</td></tr>
+      <tr><td>1</td><td>1 0 0 0</td></tr>
+      <tr><td>2</td><td>1 1 0 0</td></tr>
+      <tr><td>3</td><td>1 1 1 0</td></tr>
+      <tr><td>4</td><td>1 1 1 1</td></tr>
+      <tr><td>5</td><td>0 1 1 1</td></tr>
+      <tr><td>6</td><td>0 0 1 1</td></tr>
+      <tr><td>7</td><td>0 0 0 1</td></tr>
+      <tr><td>8</td><td>0 0 0 0 (repeats)</td></tr>
+    </tbody>
+  </table>
+  <p>Ring and Johnson counters are popular for building simple sequencers (e.g. traffic-light controllers, LED chasers) because decoding "which state am I in" needs no extra logic -- the state <em>is</em> the flip-flop outputs.</p>',
+  14
+),
+(
+  (SELECT id FROM courses WHERE slug = 'digital-logic-design'),
+  'counters',
+  'Counters',
+  '<h3>Asynchronous (ripple) counters</h3>
+  <p>A ripple counter chains T flip-flops (or JK flip-flops wired as toggle, with J = K = 1) so that each stage toggles on the clock edge produced by the <em>previous</em> stage&prime;s output, rather than all being driven by the same clock. This is simple to build, but the toggle "ripples" through the stages one at a time, so propagation delay accumulates with every added bit -- limiting how fast a wide ripple counter can run.</p>
+  <table class="data-table">
+    <caption>3-bit asynchronous up counter sequence (mod-8)</caption>
+    <thead><tr><th>Clock pulses</th><th>Q2 Q1 Q0</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0 0 0</td></tr>
+      <tr><td>1</td><td>0 0 1</td></tr>
+      <tr><td>2</td><td>0 1 0</td></tr>
+      <tr><td>3</td><td>0 1 1</td></tr>
+      <tr><td>4</td><td>1 0 0</td></tr>
+      <tr><td>5</td><td>1 0 1</td></tr>
+      <tr><td>6</td><td>1 1 0</td></tr>
+      <tr><td>7</td><td>1 1 1</td></tr>
+      <tr><td>8</td><td>0 0 0 (repeats)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Synchronous counters</h3>
+  <p>A synchronous counter clocks every flip-flop from the same clock signal at the same time, and uses combinational logic (typically AND gates) to decide which flip-flops should toggle on the next edge, based on the current state. This removes the ripple delay and lets the whole counter change state in about one flip-flop&prime;s worth of delay, regardless of width.</p>
+  <table class="data-table">
+    <caption>Synchronous 3-bit up counter toggle logic (T flip-flops)</caption>
+    <thead><tr><th>Stage</th><th>Toggles when</th></tr></thead>
+    <tbody>
+      <tr><td>T0 (LSB)</td><td>Always (T0 = 1)</td></tr>
+      <tr><td>T1</td><td>Q0 = 1</td></tr>
+      <tr><td>T2</td><td>Q1 &middot; Q0 = 1</td></tr>
+    </tbody>
+  </table>
+  <p>In general, for a synchronous binary up counter, stage n toggles exactly when every less-significant bit is currently 1 -- the same carry pattern as ordinary binary addition of 1.</p>
+
+  <h3>Up/down counters</h3>
+  <p>An up/down counter adds a direction control input. For an up count, each T input is the AND of all lower bits (as above); for a down count, each T input is instead the AND of the <em>complements</em> of all lower bits. A mux selects which toggle logic is used, based on the direction input.</p>
+
+  <h3>Designing a mod-N counter</h3>
+  <p>A counter that must count through only N states (rather than a full power of two) is designed with the standard sequential design process from the next lesson: write the state table for the N desired states, use flip-flop excitation tables to work out the required J/K (or D, or T) input equations for each transition, minimize those equations, and add a reset path for any unused states so the counter cannot get stuck outside its intended cycle.</p>
+
+  <h3>BCD (decade) counter</h3>
+  <p>A decade counter counts 0000 through 1001 (0-9 in BCD) and then resets to 0000 on the next clock, instead of continuing to 1010-1111. It is commonly built either by adding reset-on-1010 detection logic to a 4-bit binary counter, or by designing the toggle equations directly for exactly those 10 states, using the excitation-table method above.</p>',
+  15
+),
+(
+  (SELECT id FROM courses WHERE slug = 'digital-logic-design'),
+  'sequential-circuit-design-fsm',
+  'Finite State Machines',
+  '<h3>Finite state machines</h3>
+  <p>A finite state machine (FSM) is the general model behind every sequential circuit: a system that is always in exactly one of a finite number of states, and moves between states based on its current state and current inputs, on each clock edge.</p>
+
+  <h3>Moore vs. Mealy machines</h3>
+  <table class="data-table">
+    <caption>Moore vs. Mealy machines</caption>
+    <thead><tr><th>Aspect</th><th>Moore machine</th><th>Mealy machine</th></tr></thead>
+    <tbody>
+      <tr><td>Output depends on</td><td>Current state only</td><td>Current state <em>and</em> current input</td></tr>
+      <tr><td>Output changes</td><td>Only on a clock edge, synchronized with the state</td><td>Can change as soon as the input changes, between clock edges</td></tr>
+      <tr><td>State diagram notation</td><td>Output labeled inside each state circle</td><td>Output labeled on each transition arrow, alongside the input</td></tr>
+      <tr><td>States needed</td><td>Often needs more states to separate outputs</td><td>Often needs fewer states</td></tr>
+      <tr><td>Timing behavior</td><td>Glitch-free, easier to reason about</td><td>Can react one clock cycle sooner, but outputs can glitch</td></tr>
+    </tbody>
+  </table>
+
+  <h3>State diagrams and state tables</h3>
+  <p>A state diagram is a graph: circles are states, and arrows are transitions labeled with the input value(s) that cause them (and, for a Mealy machine, the output produced). A state table lists the same information as rows -- current state, input, next state, and output -- and is simply the truth table for a sequential circuit.</p>
+
+  <h3>Sequential circuit design steps</h3>
+  <ol>
+    <li><strong>Draw the state diagram</strong> from the word description of the required behavior.</li>
+    <li><strong>Write the state table</strong> from the diagram.</li>
+    <li><strong>Assign binary codes to each state</strong> (state encoding) -- m states require at least ceil(log2 m) flip-flops.</li>
+    <li><strong>Build the transition table</strong>, substituting the binary state codes into the state table.</li>
+    <li><strong>Derive excitation equations</strong> for each flip-flop input, using the flip-flop&prime;s excitation table to work out what input values cause each required state transition.</li>
+    <li><strong>Minimize</strong> each excitation equation (algebraically or with a K-map) and derive the output equation(s).</li>
+    <li><strong>Draw the final circuit</strong>: flip-flops plus the combinational logic that implements the excitation and output equations.</li>
+  </ol>
+
+  <h3>Worked example outline: detecting the sequence "101"</h3>
+  <p>To design a circuit whose output goes to 1 for one clock cycle whenever the last three bits received on a serial input were 1, 0, 1 (with overlapping sequences allowed):</p>
+  <ul>
+    <li>Define states for "no useful bits seen yet," "last bit was 1," and "last two bits were 10," and use the output to flag when a third bit of 1 arrives right after state "10."</li>
+    <li>A Moore version needs an extra state whose sole job is to output 1 (since Moore outputs depend only on state), typically 4 states total.</li>
+    <li>A Mealy version can produce the same output on the transition itself without a dedicated state, typically needing only 3 states.</li>
+    <li>From there, the design steps above -- encode the states, build the transition table, derive the flip-flop equations -- apply exactly as with any other sequential circuit.</li>
+  </ul>
+
+  <h3>State minimization</h3>
+  <p>Two states are <strong>equivalent</strong> if, for every possible input, they produce the same output and transition to equivalent next states. Removing redundant equivalent states (state minimization) reduces the flip-flop count needed to implement a machine without changing its input/output behavior -- important because unnecessary states cost real silicon area and power.</p>',
+  16
+),
+(
+  (SELECT id FROM courses WHERE slug = 'digital-logic-design'),
+  'memory-and-programmable-logic',
+  'Memory & Programmable Logic',
+  '<h3>Read-only memory (ROM)</h3>
+  <p>A ROM stores a fixed table of data as a combinational circuit: internally, it is a full decoder (one AND-gate output, or "word line," per address -- a fixed, unprogrammable array) feeding a programmable OR array that connects each word line to the output bits that should be 1 for that address.</p>
+  <table class="data-table">
+    <caption>ROM variants</caption>
+    <thead><tr><th>Type</th><th>How it is programmed</th><th>Reprogrammable?</th></tr></thead>
+    <tbody>
+      <tr><td>Mask ROM</td><td>Programmed into the silicon at the factory</td><td>No</td></tr>
+      <tr><td>PROM</td><td>Programmed once by the user, by blowing internal fuses</td><td>No</td></tr>
+      <tr><td>EPROM</td><td>Programmed electrically, erased with UV light</td><td>Yes (with a UV eraser)</td></tr>
+      <tr><td>EEPROM</td><td>Programmed and erased electrically, byte by byte</td><td>Yes</td></tr>
+      <tr><td>Flash memory</td><td>Programmed and erased electrically, in blocks</td><td>Yes</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Random-access memory (RAM)</h3>
+  <table class="data-table">
+    <caption>SRAM vs. DRAM</caption>
+    <thead><tr><th>Aspect</th><th>SRAM (static RAM)</th><th>DRAM (dynamic RAM)</th></tr></thead>
+    <tbody>
+      <tr><td>Storage element</td><td>A latch (typically six transistors)</td><td>A single capacitor plus one transistor</td></tr>
+      <tr><td>Needs refreshing?</td><td>No -- holds data as long as powered</td><td>Yes -- the capacitor leaks charge and must be periodically rewritten</td></tr>
+      <tr><td>Speed</td><td>Faster</td><td>Slower</td></tr>
+      <tr><td>Density / cost per bit</td><td>Lower density, more expensive</td><td>Higher density, cheaper</td></tr>
+      <tr><td>Typical use</td><td>CPU caches</td><td>Main system memory</td></tr>
+    </tbody>
+  </table>
+  <p>Both SRAM and DRAM are volatile: unlike ROM, they lose their contents when power is removed.</p>
+
+  <h3>Programmable logic: PLA and PAL</h3>
+  <p>A PLA (Programmable Logic Array) and a PAL (Programmable Array Logic) both implement arbitrary sum-of-products expressions directly in hardware, without needing to hand-design gate networks, but they differ in how flexible they are:</p>
+  <table class="data-table">
+    <caption>ROM vs. PLA vs. PAL</caption>
+    <thead><tr><th>Device</th><th>AND array</th><th>OR array</th></tr></thead>
+    <tbody>
+      <tr><td>ROM</td><td>Fixed (every possible minterm)</td><td>Programmable</td></tr>
+      <tr><td>PLA</td><td>Programmable</td><td>Programmable</td></tr>
+      <tr><td>PAL</td><td>Programmable</td><td>Fixed</td></tr>
+    </tbody>
+  </table>
+  <p>A PLA is the most flexible (any product terms, summed in any combination) but also the most expensive to fabricate; a PAL is cheaper and faster because only the AND array needs to be programmable, at the cost of some of that flexibility.</p>
+
+  <h3>From PALs to FPGAs</h3>
+  <p>Modern designs mostly use FPGAs (Field-Programmable Gate Arrays) instead of PLAs and PALs. An FPGA is built from thousands of small look-up tables (LUTs, each able to implement any small truth table) plus flip-flops and a programmable interconnect fabric, all configured after fabrication -- typically by compiling a Verilog or VHDL design (see the Verilog and VHDL courses) down to a bitstream that programs the LUTs and interconnect.</p>',
+  17
+),
+(
+  (SELECT id FROM courses WHERE slug = 'digital-logic-design'),
+  'timing-and-hazards',
+  'Timing & Hazards',
+  '<h3>Propagation delay</h3>
+  <p>No real gate switches instantly -- there is always some propagation delay (t_pd) between an input changing and the output settling to its new correct value. In a multi-level circuit, delays add up along the longest input-to-output path, called the <strong>critical path</strong>, which sets the maximum speed the circuit can be clocked at.</p>
+  <pre><code>Max clock frequency &asymp; 1 / (t_pd(critical path) + t_setup)</code></pre>
+
+  <h3>Setup and hold time revisited</h3>
+  <p>As covered in the latches and flip-flops lesson, every flip-flop needs its input to be stable for a setup time before the clock edge and a hold time after it. If the combinational logic feeding a flip-flop is too slow (a "setup violation") or switches too fast relative to a shared clock (a "hold violation"), the flip-flop can sample the wrong value or become metastable. Static timing analysis tools check every path in a design against these constraints before it is trusted to work in real hardware.</p>
+
+  <h3>Static hazards (glitches)</h3>
+  <p>A static hazard is a momentary, unwanted glitch on an output that should stay logically constant while a single input changes -- caused by two different paths through the circuit switching at slightly different times because of gate delays.</p>
+  <pre><code>F = AB + A&prime;C</code></pre>
+  <p>Hold B = 1 and C = 1, and let A transition from 1 to 0. Algebraically, F = 1 both before (F = AB = 1) and after (F = A&prime;C = 1) the transition -- the output should never change. But the AB term switches off only after A falls and propagates through its AND gate, while the A&prime;C term switches on only after A is inverted <em>and</em> propagates through its own AND gate. For a brief moment, both terms can be 0 at once, and F glitches to 0 even though it should have stayed at 1 the whole time. This is exactly the consensus-term situation from the laws of Boolean algebra: BC is the consensus of AB and A&prime;C, and although the consensus theorem says BC is algebraically redundant (AB + A&prime;C + BC = AB + A&prime;C), adding it back as an extra, "redundant" gate removes the hazard, because BC stays 1 throughout the transition and holds F at 1 while the other two terms switch:</p>
+  <pre><code>F = AB + A&prime;C + BC   (hazard-free)</code></pre>
+
+  <h3>Dynamic hazards and races</h3>
+  <p>A dynamic hazard occurs when an output that is supposed to change once (0-to-1 or 1-to-0) instead glitches back and forth several times before settling -- typically caused by more than two paths with different delays feeding the same output. A <strong>race condition</strong> is the more general problem in asynchronous circuits (with no common clock) where the final settled state actually depends on which of two changing signals happens to arrive first, rather than being uniquely determined by the logic -- one major reason most digital systems are designed to be synchronous, using a single global clock and edge-triggered flip-flops to sidestep this entire class of problem.</p>',
+  18
 )
 ON DUPLICATE KEY UPDATE
   title = VALUES(title),
