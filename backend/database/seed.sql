@@ -1442,7 +1442,8 @@ INSERT INTO lessons (course_id, slug, title, content, sort_order) VALUES
   (SELECT id FROM courses WHERE slug = 'verilog'),
   'verilog-syntax-basics',
   'Verilog Syntax Basics',
-  '<h3>Modules</h3>
+  '<p><span class="tag">Beginner</span></p>
+  <h3>Modules</h3>
   <p>Every piece of hardware in Verilog is described inside a <code>module</code>, with a list of input/output ports.</p>
   <pre><code>module and_gate (
     input  a,
@@ -1467,7 +1468,8 @@ endmodule</code></pre>
   (SELECT id FROM courses WHERE slug = 'verilog'),
   'combinational-logic-in-verilog',
   'Combinational Logic in Verilog',
-  '<h3>Continuous assignment</h3>
+  '<p><span class="tag">Beginner</span></p>
+  <h3>Continuous assignment</h3>
   <p>Combinational logic (logic with no memory) is usually written with <code>assign</code> statements describing what a wire is always equal to.</p>
   <pre><code>module mux2to1 (
     input  sel,
@@ -1495,7 +1497,8 @@ endmodule</code></pre>
   (SELECT id FROM courses WHERE slug = 'verilog'),
   'always-blocks-sequential-logic',
   'Always Blocks & Sequential Logic',
-  '<h3>Describing a clocked flip-flop</h3>
+  '<p><span class="tag">Beginner</span></p>
+  <h3>Describing a clocked flip-flop</h3>
   <p>Sequential logic depends on a clock edge, described in Verilog with an <code>always @(posedge clk)</code> block.</p>
   <pre><code>module d_flip_flop (
     input  clk,
@@ -1522,6 +1525,615 @@ endmodule</code></pre>
   </table>
   <p>Mixing them up is one of the most common Verilog bugs -- as a rule of thumb, use non-blocking (<code>&lt;=</code>) for clocked logic and blocking (<code>=</code>) for combinational logic.</p>',
   3
+),
+(
+  (SELECT id FROM courses WHERE slug = 'verilog'),
+  'verilog-half-full-adders',
+  'Half & Full Adders in Verilog',
+  '<p><span class="tag">Beginner</span></p>
+  <h3>Half adder: dataflow style</h3>
+  <p>The half adder from the Digital Logic Design course (Sum = A XOR B, Cout = A AND B) translates directly into one <code>assign</code> statement per output.</p>
+  <pre><code>module half_adder (
+    input  a,
+    input  b,
+    output sum,
+    output cout
+);
+    assign sum  = a ^ b;
+    assign cout = a &amp; b;
+endmodule</code></pre>
+
+  <h3>Full adder: dataflow style</h3>
+  <p>The full adder equations (Sum = A &oplus; B &oplus; Cin, Cout = AB + ACin + BCin) map just as directly:</p>
+  <pre><code>module full_adder (
+    input  a,
+    input  b,
+    input  cin,
+    output sum,
+    output cout
+);
+    assign sum  = a ^ b ^ cin;
+    assign cout = (a &amp; b) | (a &amp; cin) | (b &amp; cin);
+endmodule</code></pre>
+
+  <h3>Full adder: structural style, built from two half adders</h3>
+  <p>Verilog also lets a module be built purely by wiring up instances of other modules -- exactly like the DLD lesson describes constructing a full adder from two half adders.</p>
+  <pre><code>module full_adder_structural (
+    input  a,
+    input  b,
+    input  cin,
+    output sum,
+    output cout
+);
+    wire s1, c1, c2;
+
+    half_adder ha1 (.a(a),  .b(b),   .sum(s1),  .cout(c1));
+    half_adder ha2 (.a(s1), .b(cin), .sum(sum), .cout(c2));
+
+    assign cout = c1 | c2;
+endmodule</code></pre>
+  <p>The <code>.port_name(signal)</code> syntax is called named port connection -- it wires a signal to a specific port of the instantiated module regardless of the order the ports were declared in, which makes the connections self-documenting and less error-prone than positional connection.</p>',
+  4
+),
+(
+  (SELECT id FROM courses WHERE slug = 'verilog'),
+  'verilog-decoders-encoders',
+  'Decoders & Encoders in Verilog',
+  '<p><span class="tag">Beginner</span></p>
+  <h3>2-to-4 decoder</h3>
+  <p>A decoder is naturally described with one <code>assign</code> per output line, each one a single minterm, exactly matching the DLD truth table.</p>
+  <pre><code>module decoder_2to4 (
+    input  [1:0] a,
+    output       d0,
+    output       d1,
+    output       d2,
+    output       d3
+);
+    assign d0 = (~a[1]) &amp; (~a[0]);
+    assign d1 = (~a[1]) &amp;   a[0];
+    assign d2 =   a[1]  &amp; (~a[0]);
+    assign d3 =   a[1]  &amp;   a[0];
+endmodule</code></pre>
+
+  <h3>A cleaner decoder using a bus and a case statement</h3>
+  <p>Rather than one equation per output, real designs usually pack the outputs into a single bus and let a <code>case</code> statement inside an <code>always</code> block pick the pattern -- easier to read and easier to extend to more outputs.</p>
+  <pre><code>module decoder_2to4_case (
+    input  [1:0]      a,
+    output reg [3:0]  d
+);
+    always @(*) begin
+        case (a)
+            2''b00: d = 4''b0001;
+            2''b01: d = 4''b0010;
+            2''b10: d = 4''b0100;
+            2''b11: d = 4''b1000;
+        endcase
+    end
+endmodule</code></pre>
+  <p><code>always @(*)</code> means "re-evaluate this block whenever any signal it reads changes" -- the standard way to describe combinational logic with a <code>case</code> or <code>if</code> statement instead of a plain <code>assign</code>.</p>
+
+  <h3>4-to-2 encoder</h3>
+  <pre><code>module encoder_4to2 (
+    input  [3:0]      d,
+    output reg [1:0]  a
+);
+    always @(*) begin
+        case (d)
+            4''b0001: a = 2''b00;
+            4''b0010: a = 2''b01;
+            4''b0100: a = 2''b10;
+            4''b1000: a = 2''b11;
+            default:  a = 2''b00;
+        endcase
+    end
+endmodule</code></pre>
+  <p>The <code>default</code> case matters here: without it, an unexpected input pattern (e.g. two bits set at once) would leave <code>a</code> unassigned in simulation, which can create an accidental latch instead of the combinational logic that was intended.</p>',
+  5
+),
+(
+  (SELECT id FROM courses WHERE slug = 'verilog'),
+  'verilog-comparators-parity',
+  'Comparators & Parity Circuits in Verilog',
+  '<p><span class="tag">Beginner</span></p>
+  <h3>Multi-bit comparators</h3>
+  <p>Verilog&prime;s built-in comparison operators (<code>==</code>, <code>&gt;</code>, <code>&lt;</code>) do exactly what the DLD comparator lesson built from gates, but in one line, for any bus width.</p>
+  <pre><code>module comparator #(parameter WIDTH = 4) (
+    input  [WIDTH-1:0] a,
+    input  [WIDTH-1:0] b,
+    output gt,
+    output eq,
+    output lt
+);
+    assign gt = (a &gt;  b);
+    assign eq = (a == b);
+    assign lt = (a &lt;  b);
+endmodule</code></pre>
+  <p>The <code>#(parameter WIDTH = 4)</code> syntax makes this comparator reusable at any width -- instantiate it with <code>comparator #(.WIDTH(8)) cmp8 (...)</code> for an 8-bit version, with no changes to the module body.</p>
+
+  <h3>Parity generator and checker</h3>
+  <p>The reduction XOR operator (a single <code>^</code> applied to a whole bus) XORs every bit of the bus together, which is exactly the XOR tree the DLD parity lesson describes.</p>
+  <pre><code>module parity_gen #(parameter WIDTH = 8) (
+    input  [WIDTH-1:0] data,
+    output             even_parity_bit
+);
+    assign even_parity_bit = ^data;   // XOR of every bit in data
+endmodule
+
+module parity_check #(parameter WIDTH = 9) (
+    input  [WIDTH-1:0] received,      // data bits + parity bit together
+    output             error
+);
+    assign error = ^received;         // 0 = no error, 1 = error detected
+endmodule</code></pre>',
+  6
+),
+(
+  (SELECT id FROM courses WHERE slug = 'verilog'),
+  'verilog-multiplexers-demultiplexers',
+  'Multiplexers & Demultiplexers in Verilog',
+  '<p><span class="tag">Intermediate</span></p>
+  <h3>2-to-1 and 4-to-1 multiplexers</h3>
+  <p>A small mux is often clearest as a ternary expression; the DLD 4-to-1 mux truth table maps directly onto a <code>case</code> statement once there are more than two choices.</p>
+  <pre><code>module mux2to1 (
+    input  sel,
+    input  a,
+    input  b,
+    output y
+);
+    assign y = sel ? b : a;
+endmodule
+
+module mux4to1 (
+    input  [1:0]  sel,
+    input  [3:0]  d,
+    output reg    y
+);
+    always @(*) begin
+        case (sel)
+            2''b00: y = d[0];
+            2''b01: y = d[1];
+            2''b10: y = d[2];
+            2''b11: y = d[3];
+        endcase
+    end
+endmodule</code></pre>
+
+  <h3>Parameterized N-to-1 multiplexer</h3>
+  <p>A common plain-Verilog pattern packs all the data inputs into one wide bus and uses the select value to slice out the right piece:</p>
+  <pre><code>module mux_n #(parameter WIDTH = 4, parameter N = 8) (
+    input  [$clog2(N)-1:0] sel,
+    input  [N*WIDTH-1:0]   data_in,   // N inputs of WIDTH bits, concatenated
+    output [WIDTH-1:0]     y
+);
+    assign y = data_in[sel*WIDTH +: WIDTH];
+endmodule</code></pre>
+  <p><code>+:</code> is an indexed part-select: <code>data_in[sel*WIDTH +: WIDTH]</code> means "WIDTH bits, starting at bit position <code>sel*WIDTH</code>" -- a variable-position slice that an ordinary <code>[hi:lo]</code> range cannot express, since <code>sel</code> is not a constant.</p>
+
+  <h3>1-to-4 demultiplexer</h3>
+  <pre><code>module demux1to4 (
+    input  [1:0]      sel,
+    input             d,
+    output reg [3:0]  y
+);
+    always @(*) begin
+        y = 4''b0000;
+        y[sel] = d;
+    end
+endmodule</code></pre>
+  <p>Initializing <code>y</code> to all zeros before the conditional assignment is a common Verilog idiom: it guarantees every output bit has a defined value in every branch, which avoids accidentally inferring a latch for the bits that are not selected.</p>',
+  7
+),
+(
+  (SELECT id FROM courses WHERE slug = 'verilog'),
+  'verilog-ripple-carry-adder-alu',
+  'Ripple-Carry Adders & a Simple ALU',
+  '<p><span class="tag">Intermediate</span></p>
+  <h3>Ripple-carry adder from a generate loop</h3>
+  <p>Instantiating N full adders by hand for a wide adder is tedious and error-prone. A <code>generate for</code> loop with a <code>genvar</code> lets Verilog create the instances for you at compile time.</p>
+  <pre><code>module ripple_adder #(parameter WIDTH = 4) (
+    input  [WIDTH-1:0] a,
+    input  [WIDTH-1:0] b,
+    input              cin,
+    output [WIDTH-1:0] sum,
+    output             cout
+);
+    wire [WIDTH:0] carry;
+    assign carry[0] = cin;
+    assign cout = carry[WIDTH];
+
+    genvar i;
+    generate
+        for (i = 0; i &lt; WIDTH; i = i + 1) begin : fa_stage
+            full_adder fa (
+                .a    (a[i]),
+                .b    (b[i]),
+                .cin  (carry[i]),
+                .sum  (sum[i]),
+                .cout (carry[i+1])
+            );
+        end
+    endgenerate
+endmodule</code></pre>
+  <p>This is structurally identical to the ripple-carry adder from the Digital Logic Design course: each stage&prime;s carry-out wire feeds the next stage&prime;s carry-in, and the delay still ripples from the least significant bit to the most significant bit.</p>
+
+  <h3>A simple mode-controlled adder/subtractor</h3>
+  <p>Following the same adder/subtractor trick from the DLD course -- XOR every B bit with a mode line M, and feed M into the carry-in -- turns the same adder into a subtractor:</p>
+  <pre><code>module addsub #(parameter WIDTH = 4) (
+    input  [WIDTH-1:0] a,
+    input  [WIDTH-1:0] b,
+    input              mode,     // 0 = add, 1 = subtract (a - b)
+    output [WIDTH-1:0] result,
+    output             cout
+);
+    wire [WIDTH-1:0] b_xored = b ^ {WIDTH{mode}};
+
+    ripple_adder #(.WIDTH(WIDTH)) core (
+        .a    (a),
+        .b    (b_xored),
+        .cin  (mode),
+        .sum  (result),
+        .cout (cout)
+    );
+endmodule</code></pre>
+  <p><code>{WIDTH{mode}}</code> is a replication operator: it repeats the single bit <code>mode</code> WIDTH times, producing a bus of all 0s (mode = 0, B passes through unchanged) or all 1s (mode = 1, B is bitwise complemented before adding, matching two&prime;s complement negation).</p>',
+  8
+),
+(
+  (SELECT id FROM courses WHERE slug = 'verilog'),
+  'verilog-latches-flip-flop-types',
+  'Latches & Flip-Flop Types in Verilog',
+  '<p><span class="tag">Intermediate</span></p>
+  <h3>Why you rarely write a latch on purpose</h3>
+  <p>An SR or D latch can be described behaviorally, but most synthesis tools flag inferred latches as a likely bug, since an incompletely specified combinational <code>always</code> block infers one by accident. Real designs almost always use the clocked, edge-triggered styles below instead.</p>
+  <pre><code>// A gated D latch -- shown for completeness, rarely used directly
+module d_latch (
+    input  en,
+    input  d,
+    output reg q
+);
+    always @(en or d)
+        if (en)
+            q = d;
+        // no else: when en = 0, q intentionally holds its value
+        // (this is what makes it a latch, and what a linter will flag)
+endmodule</code></pre>
+
+  <h3>JK flip-flop</h3>
+  <p>The DLD course gives the JK characteristic equation Q(next) = JQ&prime; + K&prime;Q. Implemented directly:</p>
+  <pre><code>module jk_flip_flop (
+    input  clk,
+    input  reset,
+    input  j,
+    input  k,
+    output reg q
+);
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            q &lt;= 1''b0;
+        else
+            case ({j, k})
+                2''b00: q &lt;= q;       // hold
+                2''b01: q &lt;= 1''b0;   // reset
+                2''b10: q &lt;= 1''b1;   // set
+                2''b11: q &lt;= ~q;      // toggle
+            endcase
+    end
+endmodule</code></pre>
+
+  <h3>T flip-flop</h3>
+  <pre><code>module t_flip_flop (
+    input  clk,
+    input  reset,
+    input  t,
+    output reg q
+);
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            q &lt;= 1''b0;
+        else if (t)
+            q &lt;= ~q;
+    end
+endmodule</code></pre>
+  <p>Both flip-flops use the same skeleton as the D flip-flop from the beginner lessons: a clocked <code>always</code> block with non-blocking assignment. Only the equation deciding the next value of <code>q</code> changes -- exactly matching the characteristic-equation table from the Digital Logic Design course.</p>',
+  9
+),
+(
+  (SELECT id FROM courses WHERE slug = 'verilog'),
+  'verilog-registers-shift-registers',
+  'Registers & Shift Registers in Verilog',
+  '<p><span class="tag">Intermediate</span></p>
+  <h3>A parallel-load register</h3>
+  <pre><code>module register #(parameter WIDTH = 8) (
+    input                   clk,
+    input                   load,
+    input      [WIDTH-1:0]  d,
+    output reg [WIDTH-1:0]  q
+);
+    always @(posedge clk)
+        if (load)
+            q &lt;= d;
+endmodule</code></pre>
+
+  <h3>SIPO shift register (serial-in, parallel-out)</h3>
+  <pre><code>module sipo #(parameter WIDTH = 8) (
+    input                   clk,
+    input                   serial_in,
+    output reg [WIDTH-1:0]  q
+);
+    always @(posedge clk)
+        q &lt;= {q[WIDTH-2:0], serial_in};
+endmodule</code></pre>
+  <p>Each clock edge shifts every bit one position left and drops the new serial bit into the bottom -- the concatenation <code>{q[WIDTH-2:0], serial_in}</code> builds exactly that new value in one expression.</p>
+
+  <h3>Universal shift register</h3>
+  <p>Combining hold, shift-left, shift-right, and parallel load into one module, selected by a 2-bit mode input, matches the universal shift register from the DLD course:</p>
+  <pre><code>module universal_shift_reg #(parameter WIDTH = 8) (
+    input                   clk,
+    input      [1:0]        mode,   // 00=hold, 01=shift right, 10=shift left, 11=load
+    input                   sin_r,  // serial in for shift-right
+    input                   sin_l,  // serial in for shift-left
+    input      [WIDTH-1:0]  d,      // parallel load data
+    output reg [WIDTH-1:0]  q
+);
+    always @(posedge clk) begin
+        case (mode)
+            2''b00: q &lt;= q;
+            2''b01: q &lt;= {sin_r, q[WIDTH-1:1]};
+            2''b10: q &lt;= {q[WIDTH-2:0], sin_l};
+            2''b11: q &lt;= d;
+        endcase
+    end
+endmodule</code></pre>',
+  10
+),
+(
+  (SELECT id FROM courses WHERE slug = 'verilog'),
+  'verilog-counters',
+  'Counters in Verilog',
+  '<p><span class="tag">Intermediate</span></p>
+  <h3>Free-running binary up counter</h3>
+  <pre><code>module up_counter #(parameter WIDTH = 4) (
+    input                   clk,
+    input                   reset,
+    output reg [WIDTH-1:0]  count
+);
+    always @(posedge clk or posedge reset)
+        if (reset)
+            count &lt;= 0;
+        else
+            count &lt;= count + 1&apos;b1;
+endmodule</code></pre>
+  <p>This single line, <code>count &lt;= count + 1</code>, is what a synchronous counter&prime;s per-bit toggle logic (from the DLD counters lesson) compiles down to -- the synthesis tool works out the individual AND-gate toggle equations for you.</p>
+
+  <h3>Up/down counter</h3>
+  <pre><code>module updown_counter #(parameter WIDTH = 4) (
+    input                   clk,
+    input                   reset,
+    input                   up_down,   // 1 = count up, 0 = count down
+    output reg [WIDTH-1:0]  count
+);
+    always @(posedge clk or posedge reset)
+        if (reset)
+            count &lt;= 0;
+        else if (up_down)
+            count &lt;= count + 1&apos;b1;
+        else
+            count &lt;= count - 1&apos;b1;
+endmodule</code></pre>
+
+  <h3>Mod-N (e.g. BCD/decade) counter</h3>
+  <pre><code>module mod_n_counter #(parameter WIDTH = 4, parameter N = 10) (
+    input                   clk,
+    input                   reset,
+    output reg [WIDTH-1:0]  count
+);
+    always @(posedge clk or posedge reset)
+        if (reset)
+            count &lt;= 0;
+        else if (count == N - 1)
+            count &lt;= 0;
+        else
+            count &lt;= count + 1&apos;b1;
+endmodule</code></pre>
+  <p>Setting <code>N = 10</code> gives exactly the BCD decade counter from the Digital Logic Design course: it counts 0 through 9 and then wraps back to 0, instead of continuing into the unused 1010-1111 codes.</p>',
+  11
+),
+(
+  (SELECT id FROM courses WHERE slug = 'verilog'),
+  'verilog-carry-lookahead-generate',
+  'Carry-Lookahead Adders & Generate Blocks',
+  '<p><span class="tag">Advanced</span></p>
+  <h3>Computing carries in parallel</h3>
+  <p>The DLD course defines, for each bit position i: Pi = Ai &oplus; Bi (propagate) and Gi = Ai &middot; Bi (generate), with C(i+1) = Gi + Pi &middot; Ci. Verilog can compute every carry from these equations directly, without waiting for a chain of full adders:</p>
+  <pre><code>module cla_adder #(parameter WIDTH = 4) (
+    input  [WIDTH-1:0] a,
+    input  [WIDTH-1:0] b,
+    input              cin,
+    output [WIDTH-1:0] sum,
+    output             cout
+);
+    wire [WIDTH-1:0] p = a ^ b;         // propagate
+    wire [WIDTH-1:0] g = a &amp; b;         // generate
+    wire [WIDTH:0]   c;
+
+    assign c[0] = cin;
+
+    genvar i;
+    generate
+        for (i = 0; i &lt; WIDTH; i = i + 1) begin : carry_stage
+            assign c[i+1] = g[i] | (p[i] &amp; c[i]);
+        end
+    endgenerate
+
+    assign sum  = p ^ c[WIDTH-1:0];
+    assign cout = c[WIDTH];
+endmodule</code></pre>
+  <p>Because every <code>c[i+1]</code> is an independent <code>assign</code> statement rather than a signal threaded through instantiated full-adder modules, a synthesis tool is free to expand and optimize the whole carry chain into a shallow tree of gates -- which is exactly the "compute carries ahead of time" idea the name describes.</p>
+
+  <h3>generate blocks beyond adders</h3>
+  <p>The same <code>generate</code>/<code>genvar</code> pattern used here and in the ripple-carry adder lesson scales to building any regular, repeated structure parametrically -- an N-bit ring counter, an array of registers, or a tree of comparators -- without writing out each stage by hand.</p>',
+  12
+),
+(
+  (SELECT id FROM courses WHERE slug = 'verilog'),
+  'verilog-fsm-design',
+  'Finite State Machines in Verilog',
+  '<p><span class="tag">Advanced</span></p>
+  <h3>Encoding states</h3>
+  <p>Following the DLD design steps, an FSM in Verilog starts by naming and encoding its states, usually with <code>localparam</code> constants instead of hard-coded numbers scattered through the code:</p>
+  <pre><code>localparam S_IDLE  = 2&apos;b00;
+localparam S_GOT1  = 2&apos;b01;
+localparam S_GOT10 = 2&apos;b10;
+localparam S_MATCH = 2&apos;b11;</code></pre>
+
+  <h3>Moore sequence detector for "101"</h3>
+  <p>This is the Moore version outlined in the DLD FSM lesson: it needs a dedicated state (<code>S_MATCH</code>) whose output is 1, since a Moore machine&prime;s output can only depend on the current state.</p>
+  <pre><code>module seq_detector_101_moore (
+    input  clk,
+    input  reset,
+    input  bit_in,
+    output y
+);
+    localparam S_IDLE  = 2&apos;b00;
+    localparam S_GOT1  = 2&apos;b01;
+    localparam S_GOT10 = 2&apos;b10;
+    localparam S_MATCH = 2&apos;b11;
+
+    reg [1:0] state, next_state;
+
+    // next-state logic (combinational)
+    always @(*) begin
+        case (state)
+            S_IDLE:  next_state = bit_in ? S_GOT1  : S_IDLE;
+            S_GOT1:  next_state = bit_in ? S_GOT1  : S_GOT10;
+            S_GOT10: next_state = bit_in ? S_MATCH : S_IDLE;
+            S_MATCH: next_state = bit_in ? S_GOT1  : S_GOT10;
+            default: next_state = S_IDLE;
+        endcase
+    end
+
+    // state register (sequential)
+    always @(posedge clk or posedge reset)
+        if (reset)
+            state &lt;= S_IDLE;
+        else
+            state &lt;= next_state;
+
+    // Moore output: depends only on state
+    assign y = (state == S_MATCH);
+endmodule</code></pre>
+  <p>This three-block structure -- combinational next-state logic, a clocked state register, and a combinational output equation -- is the standard template for describing any FSM in Verilog, and it maps directly onto the DLD design steps: the <code>case</code> statement in the first block <em>is</em> the state table, and keeping it in its own <code>always @(*)</code> block, separate from the clocked block, keeps the combinational and sequential parts of the design cleanly separated.</p>
+
+  <h3>Mealy version</h3>
+  <p>A Mealy machine produces its output on the transition, which in Verilog means the output equation reads the current state <em>and</em> the current input, instead of state alone:</p>
+  <pre><code>assign y = (state == S_GOT10) &amp;&amp; bit_in;</code></pre>
+  <p>With this change, S_MATCH is no longer needed as a separate state at all -- exactly the "typically needing only 3 states" difference the DLD FSM lesson describes between the Moore and Mealy versions of the same detector.</p>',
+  13
+),
+(
+  (SELECT id FROM courses WHERE slug = 'verilog'),
+  'verilog-memory-modeling',
+  'Modeling Memory in Verilog',
+  '<p><span class="tag">Advanced</span></p>
+  <h3>Modeling a ROM</h3>
+  <p>The DLD memory lesson describes a ROM as a fixed decoder feeding a programmable OR array. In Verilog, the simplest behavioral model of that same idea is just an array of registers, initialized once, and read combinationally by address:</p>
+  <pre><code>module rom_16x8 (
+    input  [3:0] addr,
+    output [7:0] data
+);
+    reg [7:0] mem [0:15];
+
+    initial begin
+        mem[0] = 8&apos;h00;
+        mem[1] = 8&apos;h01;
+        mem[2] = 8&apos;h04;
+        // ... remaining entries would be filled in the same way,
+        // or loaded from a file with $readmemh in simulation
+    end
+
+    assign data = mem[addr];
+endmodule</code></pre>
+
+  <h3>Modeling a RAM</h3>
+  <p>A RAM adds a write port: on a write-enabled clock edge the addressed word is updated, exactly like the SRAM described in the DLD lesson (a latch per storage cell, holding its value until explicitly rewritten).</p>
+  <pre><code>module ram_16x8 (
+    input        clk,
+    input        write_enable,
+    input  [3:0] addr,
+    input  [7:0] data_in,
+    output [7:0] data_out
+);
+    reg [7:0] mem [0:15];
+
+    always @(posedge clk)
+        if (write_enable)
+            mem[addr] &lt;= data_in;
+
+    assign data_out = mem[addr];   // combinational read
+endmodule</code></pre>
+  <p>This combinational-read, synchronous-write style is the most common simple RAM model. Real on-chip RAM blocks are usually synchronous on both read and write (registering <code>data_out</code> as well) to match how physical memory macros actually behave, and to keep timing predictable.</p>',
+  14
+),
+(
+  (SELECT id FROM courses WHERE slug = 'verilog'),
+  'verilog-testbenches-verification',
+  'Testbenches & Verification',
+  '<p><span class="tag">Advanced</span></p>
+  <h3>Why testbenches</h3>
+  <p>Every circuit in this course, from a half adder to an FSM, needs to be checked against its truth table or state diagram before anyone trusts it in real hardware. A testbench is a separate Verilog module, never synthesized, that instantiates the design and drives it with test inputs in simulation.</p>
+
+  <h3>A simple testbench for the full adder</h3>
+  <pre><code>module full_adder_tb;
+    reg  a, b, cin;
+    wire sum, cout;
+
+    full_adder dut (.a(a), .b(b), .cin(cin), .sum(sum), .cout(cout));
+
+    initial begin
+        $monitor("t=%0t a=%b b=%b cin=%b -&gt; sum=%b cout=%b", $time, a, b, cin, sum, cout);
+
+        a = 0; b = 0; cin = 0; #10;
+        a = 0; b = 1; cin = 0; #10;
+        a = 1; b = 1; cin = 0; #10;
+        a = 1; b = 1; cin = 1; #10;
+
+        $finish;
+    end
+endmodule</code></pre>
+  <p><code>dut</code> ("device under test") is just a conventional instance name. <code>$monitor</code> prints a new line automatically whenever any of its listed signals changes, so the whole simulation timeline shows up without needing a <code>$display</code> after every input change. <code>#10</code> advances simulation time by 10 time units, letting the combinational logic settle before the next input change.</p>
+
+  <h3>Clock generation and a self-checking testbench</h3>
+  <p>Sequential designs additionally need a clock generator, and a well-written testbench compares the design&prime;s output against an expected value automatically instead of requiring a human to read through a log. Rather than hard-coding the exact cycle reset releases on, this testbench captures whatever count value appears right after reset is lifted as its baseline, then checks that every following edge increments from there by exactly one -- a pattern that does not depend on precisely hand-tracking simulation timing:</p>
+  <pre><code>module up_counter_tb;
+    reg clk = 0;
+    reg reset = 1;
+    wire [3:0] count;
+
+    up_counter #(.WIDTH(4)) dut (.clk(clk), .reset(reset), .count(count));
+
+    always #5 clk = ~clk;   // 10-time-unit clock period
+
+    reg [3:0] expected;
+    integer i;
+
+    initial begin
+        #12 reset = 0;
+        @(posedge clk);
+        expected = count;   // capture the count right after reset releases
+
+        for (i = 0; i &lt; 20; i = i + 1) begin
+            @(posedge clk);
+            expected = expected + 1&apos;b1;
+            if (count !== expected)
+                $display("MISMATCH at i=%0d: expected %0d, got %0d", i, expected, count);
+        end
+
+        $display("Test complete.");
+        $finish;
+    end
+endmodule</code></pre>
+  <p>Writing testbenches like this for every module in this course -- checking each one against the exact truth table, characteristic equation, or state diagram it was designed from in the Digital Logic Design course -- is one of the most valuable habits for catching bugs before a design ever reaches real hardware.</p>',
+  15
 )
 ON DUPLICATE KEY UPDATE
   title = VALUES(title),
