@@ -55,6 +55,42 @@ R = V / I</code></pre>
 ),
 (
   (SELECT id FROM courses WHERE slug = 'electricity-electronics-basics'),
+  'electric-power-and-energy',
+  'Electric Power & Energy',
+  '<h3>Power in a circuit</h3>
+  <p>Electrical power is the rate at which energy is delivered to or drawn from a circuit, measured in watts (W). Since voltage is energy per unit charge and current is charge per unit time, multiplying them gives energy per unit time -- power:</p>
+  <pre><code>P = V &times; I</code></pre>
+  <p>Combining this with Ohm&prime;s Law (V = IR) gives two more useful forms, handy when resistance is known but not both V and I:</p>
+  <pre><code>P = I&sup2;R
+P = V&sup2;/R</code></pre>
+
+  <h3>Worked example</h3>
+  <p>A 60 W light bulb is connected to a 120 V supply. How much current does it draw, and what is its resistance?</p>
+  <pre><code>I = P / V = 60 / 120 = 0.5 A
+R = V / I = 120 / 0.5 = 240 &Omega;</code></pre>
+
+  <h3>Energy and electricity bills</h3>
+  <p>Power is the rate of energy use; multiplying power by time gives total energy. Utility bills use the kilowatt-hour (kWh) -- the energy used by a 1000 W load running for one hour -- rather than the joule, since it is a more convenient size for household consumption.</p>
+  <pre><code>Energy (kWh) = Power (kW) &times; Time (hours)</code></pre>
+  <p>Example: a 100 W lamp left on for 10 hours uses 0.1 kW &times; 10 h = 1 kWh.</p>
+
+  <h3>Efficiency</h3>
+  <p>Real devices convert some input energy into a form other than the intended useful output -- almost always heat. Efficiency is the ratio of useful output power to total input power:</p>
+  <pre><code>Efficiency (%) = (Useful output power / Input power) &times; 100</code></pre>
+  <table class="data-table">
+    <caption>Typical efficiency ranges</caption>
+    <thead><tr><th>Device</th><th>Typical efficiency</th></tr></thead>
+    <tbody>
+      <tr><td>Incandescent light bulb</td><td>&asymp; 5% (most energy becomes heat, not light)</td></tr>
+      <tr><td>LED light bulb</td><td>&asymp; 80-90%</td></tr>
+      <tr><td>Switching power supply</td><td>&asymp; 85-95%</td></tr>
+      <tr><td>Linear voltage regulator</td><td>Can be well under 50%, depending on the voltage it has to drop</td></tr>
+    </tbody>
+  </table>',
+  2
+),
+(
+  (SELECT id FROM courses WHERE slug = 'electricity-electronics-basics'),
   'series-parallel-circuits',
   'Series & Parallel Circuits',
   '<h3>Series circuits</h3>
@@ -78,7 +114,213 @@ R = V / I</code></pre>
   <h3>Worked example</h3>
   <p>Two 100 &Omega; resistors in parallel:</p>
   <pre><code>R_total = (100 &times; 100) / (100 + 100) = 50 &Omega;</code></pre>',
-  2
+  3
+),
+(
+  (SELECT id FROM courses WHERE slug = 'electricity-electronics-basics'),
+  'kirchhoffs-laws',
+  'Kirchhoff&prime;s Laws',
+  '<h3>Kirchhoff&prime;s Current Law (KCL)</h3>
+  <p>KCL states that the total current flowing into any node (junction) must equal the total current flowing out of it -- charge cannot pile up or vanish at a point in a circuit.</p>
+  <pre><code>&Sigma; I(in) = &Sigma; I(out)</code></pre>
+  <p>Equivalently, if current flowing into a node is treated as positive and current flowing out as negative, the sum of all currents at a node is zero.</p>
+
+  <h3>Kirchhoff&prime;s Voltage Law (KVL)</h3>
+  <p>KVL states that the sum of all voltage rises and drops around any closed loop in a circuit must equal zero -- energy gained from sources around a loop must exactly equal energy given up across the loop&prime;s resistances and other elements.</p>
+  <pre><code>&Sigma; V(rises) = &Sigma; V(drops)</code></pre>
+
+  <h3>Worked example: a two-resistor loop</h3>
+  <p>A 9 V battery drives two resistors, R1 = 100 &Omega; and R2 = 200 &Omega;, in series.</p>
+  <pre><code>KVL: 9V = I &middot; R1 + I &middot; R2 = I(100 + 200)
+I = 9 / 300 = 0.03 A = 30 mA
+
+Voltage across R1: V1 = I &times; R1 = 0.03 &times; 100 = 3 V
+Voltage across R2: V2 = I &times; R2 = 0.03 &times; 200 = 6 V
+Check: V1 + V2 = 3 + 6 = 9 V = battery voltage &check;</code></pre>
+
+  <h3>Why these laws matter</h3>
+  <p>KCL and KVL are the two fundamental rules that every other circuit analysis technique -- series/parallel reduction, voltage/current dividers, Thevenin/Norton equivalents, mesh and nodal analysis -- is ultimately built from. Any circuit, no matter how complex, must satisfy both laws at every node and around every loop.</p>',
+  4
+),
+(
+  (SELECT id FROM courses WHERE slug = 'electricity-electronics-basics'),
+  'circuit-analysis-techniques',
+  'Circuit Analysis Techniques',
+  '<h3>Voltage divider</h3>
+  <p>Two resistors in series split an input voltage in proportion to their resistance -- the larger resistor gets the larger share of the voltage.</p>
+  <pre><code>Vout = Vin &times; R2 / (R1 + R2)</code></pre>
+  <p>Example: Vin = 12 V, R1 = 1 k&Omega;, R2 = 2 k&Omega; gives Vout = 12 &times; 2000/3000 = 8 V.</p>
+  <p>Voltage dividers are simple, but "loading" (connecting anything else to Vout that draws current) changes the ratio -- they work best when whatever reads Vout draws very little current compared to what flows through R1 and R2.</p>
+
+  <h3>Current divider</h3>
+  <p>Two resistors in parallel split an input current inversely to their resistance -- the smaller resistor carries the larger share of the current.</p>
+  <pre><code>I1 = Iin &times; R2 / (R1 + R2)
+I2 = Iin &times; R1 / (R1 + R2)</code></pre>
+
+  <h3>Thevenin&prime;s theorem</h3>
+  <p>Any network of resistors and sources, viewed from just two terminals, behaves exactly like one ideal voltage source (V_TH) in series with one resistor (R_TH):</p>
+  <ul>
+    <li><strong>V_TH</strong> is the open-circuit voltage measured across the two terminals, with nothing else connected.</li>
+    <li><strong>R_TH</strong> is the resistance measured across the terminals with all independent sources turned off (voltage sources replaced by short circuits, current sources replaced by open circuits).</li>
+  </ul>
+  <p>Reducing a complicated network to its Thevenin equivalent makes it easy to see how it will respond to whatever load is eventually connected, without re-analyzing the whole original circuit every time the load changes.</p>
+
+  <h3>Norton&prime;s theorem</h3>
+  <p>Norton&prime;s theorem is the dual of Thevenin&prime;s: the same two-terminal network can equally be modeled as one ideal current source (I_N) in parallel with one resistor (R_N = R_TH).</p>
+  <pre><code>I_N = V_TH / R_TH</code></pre>
+  <p>Thevenin and Norton equivalents of the same network are always interchangeable using this relationship.</p>
+
+  <h3>Superposition</h3>
+  <p>In any linear circuit with multiple independent sources, the voltage or current anywhere in the circuit is the sum of the contributions from each source acting alone, with every other independent source turned off (voltage sources shorted, current sources opened) one at a time.</p>',
+  5
+),
+(
+  (SELECT id FROM courses WHERE slug = 'electricity-electronics-basics'),
+  'capacitors-and-capacitance',
+  'Capacitors & Capacitance',
+  '<h3>What a capacitor does</h3>
+  <p>A capacitor stores electrical energy in an electric field between two conductive plates separated by an insulator (a dielectric). Capacitance C, measured in farads (F), describes how much charge a capacitor stores per volt across it:</p>
+  <pre><code>C = Q / V</code></pre>
+  <p>A farad is a very large unit for most electronics -- practical capacitors are usually specified in microfarads (&micro;F), nanofarads (nF), or picofarads (pF).</p>
+
+  <h3>Capacitors in series and parallel</h3>
+  <table class="data-table">
+    <caption>Capacitor combination rules (the opposite pattern from resistors)</caption>
+    <thead><tr><th>Arrangement</th><th>Formula</th></tr></thead>
+    <tbody>
+      <tr><td>Parallel</td><td>C_total = C1 + C2 + ...</td></tr>
+      <tr><td>Series</td><td>1/C_total = 1/C1 + 1/C2 + ...</td></tr>
+    </tbody>
+  </table>
+  <p>Capacitors combine the opposite way resistors do: parallel capacitors add directly (more plate area, more stored charge for the same voltage), while series capacitors combine like parallel resistors.</p>
+
+  <h3>Charging and discharging: the RC time constant</h3>
+  <p>Charging a capacitor through a resistor does not happen instantly -- the voltage across the capacitor rises (or falls) exponentially, characterized by the time constant &tau; (tau):</p>
+  <pre><code>&tau; = R &times; C</code></pre>
+  <p>&tau; is the time it takes the capacitor voltage to reach about 63% of its final value when charging (or fall to about 37% of its starting value when discharging). After roughly 5&tau;, a capacitor is considered fully charged or discharged for most practical purposes.</p>
+  <table class="data-table">
+    <caption>Capacitor voltage during charging (through a resistor from a fixed supply)</caption>
+    <thead><tr><th>Time elapsed</th><th>% of final voltage reached</th></tr></thead>
+    <tbody>
+      <tr><td>1&tau;</td><td>&asymp; 63%</td></tr>
+      <tr><td>2&tau;</td><td>&asymp; 86%</td></tr>
+      <tr><td>3&tau;</td><td>&asymp; 95%</td></tr>
+      <tr><td>5&tau;</td><td>&asymp; 99% (considered "fully charged")</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Energy stored in a capacitor</h3>
+  <pre><code>E = &frac12; C V&sup2;</code></pre>
+
+  <h3>Common uses</h3>
+  <table class="data-table">
+    <caption>Common capacitor applications</caption>
+    <thead><tr><th>Application</th><th>Why a capacitor helps</th></tr></thead>
+    <tbody>
+      <tr><td>Decoupling / bulk supply filtering</td><td>Supplies quick bursts of current and smooths voltage dips near a chip</td></tr>
+      <tr><td>Timing circuits</td><td>The RC time constant sets a predictable delay</td></tr>
+      <tr><td>Blocking DC / passing AC</td><td>A charged capacitor blocks steady DC but still lets a changing AC signal through</td></tr>
+    </tbody>
+  </table>',
+  6
+),
+(
+  (SELECT id FROM courses WHERE slug = 'electricity-electronics-basics'),
+  'inductors-and-inductance',
+  'Inductors & Inductance',
+  '<h3>What an inductor does</h3>
+  <p>An inductor stores energy in a magnetic field created by current flowing through a coil of wire. Inductance L, measured in henries (H), describes how strongly a changing current induces an opposing voltage:</p>
+  <pre><code>V = L &times; (dI/dt)</code></pre>
+  <p>In words: the voltage across an inductor is proportional to how fast its current is changing, not to the current itself. An inductor carrying a perfectly steady current (dI/dt = 0) has zero voltage across it, no matter how large that current is.</p>
+
+  <h3>Inductors in series and parallel</h3>
+  <table class="data-table">
+    <caption>Inductor combination rules (the same pattern as resistors)</caption>
+    <thead><tr><th>Arrangement</th><th>Formula</th></tr></thead>
+    <tbody>
+      <tr><td>Series</td><td>L_total = L1 + L2 + ...</td></tr>
+      <tr><td>Parallel</td><td>1/L_total = 1/L1 + 1/L2 + ...</td></tr>
+    </tbody>
+  </table>
+
+  <h3>RL circuits and the time constant</h3>
+  <p>Just as an RC circuit has a time constant &tau; = RC, an RL circuit (a resistor and inductor in series) has:</p>
+  <pre><code>&tau; = L / R</code></pre>
+  <p>Current through an inductor rises (or falls) exponentially toward its final value with this same time constant, following the same 63%/86%/95%/99% pattern as capacitor voltage.</p>
+
+  <h3>Energy stored in an inductor</h3>
+  <pre><code>E = &frac12; L I&sup2;</code></pre>
+
+  <h3>An inductor resists sudden current changes</h3>
+  <p>Because V = L(dI/dt), forcing an inductor&prime;s current to change instantly would require infinite voltage -- in practice, an inductor resists sudden current changes, the opposite behavior from a capacitor (which resists sudden voltage changes). This is why abruptly switching off current through an inductor (e.g. a relay coil) can produce a large voltage spike, usually suppressed with a flyback diode.</p>',
+  7
+),
+(
+  (SELECT id FROM courses WHERE slug = 'electricity-electronics-basics'),
+  'ac-signals-and-rms',
+  'AC Signals & RMS Values',
+  '<h3>AC vs. DC</h3>
+  <p>Direct current (DC) flows in one constant direction, like a battery. Alternating current (AC) periodically reverses direction, most commonly following a sine wave -- the form electricity is generated and distributed in worldwide.</p>
+
+  <h3>Describing a sine wave</h3>
+  <pre><code>v(t) = V_peak &middot; sin(2&pi;ft + &phi;)</code></pre>
+  <table class="data-table">
+    <caption>Sine wave parameters</caption>
+    <thead><tr><th>Symbol</th><th>Meaning</th><th>Unit</th></tr></thead>
+    <tbody>
+      <tr><td>V_peak</td><td>Maximum instantaneous voltage</td><td>volts</td></tr>
+      <tr><td>f</td><td>Frequency -- cycles per second</td><td>hertz (Hz)</td></tr>
+      <tr><td>T</td><td>Period -- time for one full cycle, T = 1/f</td><td>seconds</td></tr>
+      <tr><td>&phi;</td><td>Phase -- how far the wave is shifted in time relative to a reference</td><td>degrees or radians</td></tr>
+    </tbody>
+  </table>
+  <table class="data-table">
+    <caption>Standard mains AC power</caption>
+    <thead><tr><th>Region</th><th>Frequency</th><th>Typical voltage (RMS)</th></tr></thead>
+    <tbody>
+      <tr><td>North America</td><td>60 Hz</td><td>120 V</td></tr>
+      <tr><td>Europe / most of the world</td><td>50 Hz</td><td>230 V</td></tr>
+    </tbody>
+  </table>
+
+  <h3>RMS: why AC voltage is not quoted as its peak value</h3>
+  <p>Root-mean-square (RMS) voltage is the equivalent DC voltage that would deliver the same average power to a resistive load. For a pure sine wave:</p>
+  <pre><code>V_RMS = V_peak / &radic;2  &asymp; 0.707 &times; V_peak</code></pre>
+  <p>"120 V mains" means 120 V RMS -- the actual peak voltage on a North American outlet is about 120 &times; 1.414 &asymp; 170 V.</p>
+
+  <h3>Average power in an AC resistive circuit</h3>
+  <p>Once RMS values are used, the familiar DC power formulas apply directly:</p>
+  <pre><code>P_avg = V_RMS &times; I_RMS = I_RMS&sup2; &times; R = V_RMS&sup2; / R</code></pre>',
+  8
+),
+(
+  (SELECT id FROM courses WHERE slug = 'electricity-electronics-basics'),
+  'ac-circuit-analysis-impedance',
+  'AC Circuit Analysis: Reactance & Impedance',
+  '<h3>Why AC needs more than resistance</h3>
+  <p>Capacitors and inductors oppose AC current in a way that depends on frequency, and -- unlike a resistor -- they also shift the timing (phase) between voltage and current. <strong>Reactance</strong> is the AC equivalent of resistance for these frequency-dependent components, measured in ohms.</p>
+
+  <h3>Capacitive and inductive reactance</h3>
+  <table class="data-table">
+    <caption>Reactance formulas</caption>
+    <thead><tr><th>Component</th><th>Reactance</th><th>Behavior as frequency rises</th></tr></thead>
+    <tbody>
+      <tr><td>Capacitor</td><td>X_C = 1 / (2&pi;fC)</td><td>Reactance falls -- a capacitor increasingly looks like a short circuit at high frequency</td></tr>
+      <tr><td>Inductor</td><td>X_L = 2&pi;fL</td><td>Reactance rises -- an inductor increasingly looks like an open circuit at high frequency</td></tr>
+    </tbody>
+  </table>
+  <p>This opposite frequency behavior is exactly why RC and RL circuits make useful filters, covered later in this course.</p>
+
+  <h3>Impedance</h3>
+  <p>Impedance Z generalizes resistance to AC circuits by combining resistance and reactance. Because reactance also shifts phase, impedance is naturally described as a complex number, with resistance as the real part and reactance as the imaginary part:</p>
+  <pre><code>Z = R + jX</code></pre>
+  <p>For a resistor and capacitor in series: Z = R - jX_C. For a resistor and inductor in series: Z = R + jX_L. Ohm&prime;s Law generalizes directly: V = I &times; Z, using complex (phasor) values for V, I, and Z.</p>
+
+  <h3>Series RLC resonance</h3>
+  <p>In a series RLC circuit, X_L and X_C work against each other because of their opposite signs. At one specific frequency, called the resonant frequency, they cancel exactly (X_L = X_C), leaving only R to oppose current -- current is at its maximum at resonance.</p>
+  <pre><code>f_resonant = 1 / (2&pi;&radic;(LC))</code></pre>
+  <p>Resonance is the underlying principle behind radio tuning circuits, which use an RLC-like network to select one desired frequency out of many.</p>',
+  9
 ),
 (
   (SELECT id FROM courses WHERE slug = 'electricity-electronics-basics'),
@@ -106,7 +348,180 @@ R = V / I</code></pre>
     </tbody>
   </table>
   <p>In digital circuits, transistors are almost always used as switches: fully off (cutoff) represents a logic 0, and fully on (saturation) represents a logic 1. This is the foundation that logic gates are built from.</p>',
-  3
+  10
+),
+(
+  (SELECT id FROM courses WHERE slug = 'electricity-electronics-basics'),
+  'power-supplies-and-voltage-regulation',
+  'Power Supplies: Rectifiers & Regulation',
+  '<h3>From AC mains to usable DC</h3>
+  <p>Most electronics need a steady DC voltage, but wall power is AC. A power supply converts AC to DC in stages: rectification, filtering, and regulation.</p>
+
+  <h3>Rectifiers</h3>
+  <table class="data-table">
+    <caption>Half-wave vs. full-wave rectification</caption>
+    <thead><tr><th>Type</th><th>Diodes needed</th><th>Output</th></tr></thead>
+    <tbody>
+      <tr><td>Half-wave</td><td>1</td><td>Passes only the positive half of each AC cycle; the negative half is simply blocked, wasting half the input power</td></tr>
+      <tr><td>Full-wave (bridge)</td><td>4 (in a bridge arrangement)</td><td>Flips the negative half of each cycle positive instead of discarding it, so both halves of every cycle contribute to the output</td></tr>
+    </tbody>
+  </table>
+  <p>A full-wave bridge rectifier is by far the more common choice in real power supplies, since it uses the input power far more efficiently and produces a smoother, more easily filtered output.</p>
+
+  <h3>Filtering</h3>
+  <p>A rectifier alone produces a bumpy, pulsing DC output, not a flat one. A large filter capacitor placed across the output smooths this out: it charges toward the peak voltage on each pulse and then discharges slowly through the load between pulses, filling in the gaps. The remaining up-and-down wobble is called <strong>ripple</strong>, and it shrinks as the filter capacitor gets larger or the load current gets smaller.</p>
+
+  <h3>Regulation</h3>
+  <p>Even a well-filtered supply still sags under changing load and still has some ripple -- a voltage regulator holds the output at a fixed voltage despite both.</p>
+  <table class="data-table">
+    <caption>Linear vs. switching regulators</caption>
+    <thead><tr><th>Aspect</th><th>Linear regulator</th><th>Switching regulator</th></tr></thead>
+    <tbody>
+      <tr><td>How it works</td><td>Acts like a variable resistor, dropping the excess voltage as heat</td><td>Rapidly switches a transistor on/off and filters the result with an inductor and capacitor</td></tr>
+      <tr><td>Efficiency</td><td>Lower -- wastes power proportional to the voltage it drops</td><td>Higher -- typically 85-95%</td></tr>
+      <tr><td>Noise / complexity</td><td>Very clean output, simple to use</td><td>Some switching noise, more complex, but far less wasted heat</td></tr>
+      <tr><td>Typical use</td><td>Low-power, noise-sensitive analog circuits</td><td>Battery-powered devices, anywhere efficiency matters</td></tr>
+    </tbody>
+  </table>',
+  11
+),
+(
+  (SELECT id FROM courses WHERE slug = 'electricity-electronics-basics'),
+  'operational-amplifiers',
+  'Operational Amplifiers',
+  '<h3>The ideal op-amp</h3>
+  <p>An operational amplifier ("op-amp") is a high-gain amplifier with two inputs (inverting, marked "-", and non-inverting, marked "+") and one output. Circuit analysis is made simple by two ideal assumptions:</p>
+  <ul>
+    <li>The two input terminals draw no current (infinite input impedance).</li>
+    <li>In a stable circuit with feedback, the op-amp drives its output so that the voltage difference between its two inputs is zero (infinite open-loop gain).</li>
+  </ul>
+
+  <h3>Inverting amplifier</h3>
+  <pre><code>Vout = -(Rf / Rin) &times; Vin</code></pre>
+  <p>The negative sign means the output is an inverted (flipped) and scaled copy of the input. The gain magnitude is set purely by the ratio of two resistors, Rf and Rin -- not by anything intrinsic to the op-amp itself, which is what makes op-amp circuits so predictable and easy to design.</p>
+
+  <h3>Non-inverting amplifier</h3>
+  <pre><code>Vout = (1 + Rf / Rin) &times; Vin</code></pre>
+  <p>Here the output is in phase with the input, and the gain is always at least 1 (setting Rf = 0 gives a gain of exactly 1 -- a unity-gain buffer).</p>
+
+  <h3>Comparator</h3>
+  <p>Used without feedback, an op-amp simply drives its output fully to one supply rail or the other, depending on which input is higher -- a comparator, useful for detecting when a signal crosses a threshold.</p>
+  <table class="truth-table">
+    <caption>Op-amp used as a comparator</caption>
+    <thead><tr><th>Condition</th><th>Output</th></tr></thead>
+    <tbody>
+      <tr><td>V+ &gt; V-</td><td>Output swings to the positive supply rail</td></tr>
+      <tr><td>V+ &lt; V-</td><td>Output swings to the negative supply rail (or ground)</td></tr>
+    </tbody>
+  </table>',
+  12
+),
+(
+  (SELECT id FROM courses WHERE slug = 'electricity-electronics-basics'),
+  'passive-filters',
+  'Passive Filters',
+  '<h3>Filtering by frequency</h3>
+  <p>A filter passes some frequencies while attenuating (weakening) others. The simplest filters combine just one resistor and one capacitor.</p>
+
+  <h3>Low-pass RC filter</h3>
+  <p>Taking the output across the capacitor in a series RC circuit passes low frequencies (where the capacitor&prime;s reactance is large, so little signal is dropped across it) and attenuates high frequencies (where reactance is small, so most of the signal is dropped across the resistor instead).</p>
+  <pre><code>f_cutoff = 1 / (2&pi;RC)</code></pre>
+
+  <h3>High-pass RC filter</h3>
+  <p>Taking the output across the resistor instead gives the opposite behavior: high frequencies pass through relatively unattenuated, while low frequencies are blocked (the capacitor&prime;s large reactance at low frequency drops most of the signal there instead).</p>
+  <pre><code>f_cutoff = 1 / (2&pi;RC)   (same formula, same components, different output node)</code></pre>
+
+  <h3>The cutoff frequency</h3>
+  <p>At f_cutoff, the output power is reduced to half of its input value (the voltage drops to about 70.7% of the input, or -3 dB) -- this is the conventional dividing line between a filter&prime;s "passband" and its "stopband," even though the roll-off beyond that point is gradual rather than a hard cutoff.</p>
+
+  <h3>RL filters</h3>
+  <p>Resistor-inductor pairs form filters the same way, just with the roles reversed compared to RC, since inductive reactance rises with frequency instead of falling: a resistor-inductor low-pass filter takes its output across the resistor, and a high-pass filter takes its output across the inductor.</p>',
+  13
+),
+(
+  (SELECT id FROM courses WHERE slug = 'electricity-electronics-basics'),
+  'electromagnetism-and-induction',
+  'Electromagnetism & Induction',
+  '<h3>Current creates a magnetic field</h3>
+  <p>Any current-carrying wire produces a magnetic field around it; coiling the wire concentrates and strengthens that field, which is exactly what an inductor is. Wrapping the coil around an iron core concentrates it further still -- the basis of electromagnets, relays, and motor windings.</p>
+
+  <h3>Faraday&prime;s law of induction</h3>
+  <p>A changing magnetic field through a coil induces a voltage in that coil, proportional to how fast the magnetic flux is changing:</p>
+  <pre><code>V_induced = -N &times; (d&Phi;/dt)</code></pre>
+  <p>where N is the number of turns in the coil and &Phi; is the magnetic flux through it. This is the principle behind generators (a changing magnetic field, produced by moving a magnet or coil, creates electricity) and transformers (a changing current in one coil induces a voltage in a nearby coil).</p>
+
+  <h3>Transformers</h3>
+  <p>A transformer uses two coils sharing a common magnetic core to step voltage up or down between its primary and secondary windings, with essentially no direct electrical connection between the two sides.</p>
+  <pre><code>V_secondary / V_primary = N_secondary / N_primary</code></pre>
+  <p>An ideal transformer conserves power, so as voltage steps up, current steps down by the same ratio (and vice versa) -- it cannot deliver more power out than is put in.</p>
+
+  <h3>Motors and generators: the same principle, run in opposite directions</h3>
+  <p>A current-carrying conductor in a magnetic field experiences a force -- the basis of every electric motor. Running that same physical arrangement in reverse, mechanically spinning a conductor through a magnetic field, induces a current instead -- the basis of every generator. This connects directly to the Motor Control lesson in the Robotics course: a spinning DC motor is always also acting a little like a generator, producing a "back-EMF" that opposes the current driving it.</p>',
+  14
+),
+(
+  (SELECT id FROM courses WHERE slug = 'electricity-electronics-basics'),
+  'measurement-instruments',
+  'Measurement Instruments',
+  '<h3>The multimeter</h3>
+  <p>A multimeter is the single most useful tool in electronics, typically able to measure voltage, current, resistance, and continuity.</p>
+  <table class="data-table">
+    <caption>How to connect a multimeter</caption>
+    <thead><tr><th>Measurement</th><th>Connection</th><th>Common mistake</th></tr></thead>
+    <tbody>
+      <tr><td>Voltage (V)</td><td>In parallel across the two points being measured</td><td>None major -- a voltmeter has very high input resistance, so it barely disturbs the circuit</td></tr>
+      <tr><td>Current (A)</td><td>In series, breaking the circuit so current flows through the meter</td><td>Leaving the meter in current mode while measuring voltage can short the circuit through the meter&prime;s very low resistance, often blowing its internal fuse</td></tr>
+      <tr><td>Resistance (&Omega;)</td><td>Across an isolated component, with power removed from the circuit</td><td>Measuring resistance in a live, powered circuit gives a wrong reading and can damage the meter</td></tr>
+    </tbody>
+  </table>
+
+  <h3>The oscilloscope</h3>
+  <p>An oscilloscope plots voltage on the vertical axis against time on the horizontal axis, which a multimeter cannot show -- it is the tool for seeing waveform shape, frequency, timing relationships between signals, and glitches that a single numeric reading would completely miss.</p>
+  <table class="data-table">
+    <caption>Key oscilloscope controls</caption>
+    <thead><tr><th>Control</th><th>What it sets</th></tr></thead>
+    <tbody>
+      <tr><td>Volts/division</td><td>Vertical scale -- how many volts each grid square represents</td></tr>
+      <tr><td>Time/division</td><td>Horizontal scale -- how much time each grid square represents</td></tr>
+      <tr><td>Trigger</td><td>The condition (e.g. a rising edge crossing a set voltage) that tells the scope when to start each new sweep, so a repeating waveform appears stable on screen instead of scrolling</td></tr>
+    </tbody>
+  </table>',
+  15
+),
+(
+  (SELECT id FROM courses WHERE slug = 'electricity-electronics-basics'),
+  'circuit-protection-and-safety',
+  'Circuit Protection & Safety',
+  '<h3>Fuses and circuit breakers</h3>
+  <p>Both protect a circuit from excessive current, which can overheat wires and start fires, by breaking the circuit before that happens.</p>
+  <table class="data-table">
+    <caption>Fuses vs. circuit breakers</caption>
+    <thead><tr><th>Aspect</th><th>Fuse</th><th>Circuit breaker</th></tr></thead>
+    <tbody>
+      <tr><td>How it works</td><td>A thin metal element melts and breaks the circuit when current exceeds its rating</td><td>A mechanical (or electronic) switch trips open when current exceeds its rating</td></tr>
+      <tr><td>After tripping</td><td>Must be replaced</td><td>Can simply be reset and reused</td></tr>
+      <tr><td>Typical use</td><td>Individual devices and circuit boards</td><td>Household electrical panels</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Grounding</h3>
+  <p>"Ground" (or "earth") is a common reference point that circuit voltages are measured relative to, and, in mains wiring, a dedicated safety conductor. A properly grounded metal appliance chassis gives a fault current (e.g. a wire touching the case) a low-resistance path back to the source, tripping a breaker or fuse quickly instead of leaving the case dangerously energized and waiting for a person to complete the circuit instead.</p>
+
+  <h3>Electric shock and safe practice</h3>
+  <table class="data-table">
+    <caption>Approximate effects of AC current through the body (illustrative only -- actual thresholds vary by person and current path)</caption>
+    <thead><tr><th>Current</th><th>Typical effect</th></tr></thead>
+    <tbody>
+      <tr><td>&asymp; 1 mA</td><td>Threshold of perception (a slight tingle)</td></tr>
+      <tr><td>&asymp; 10-20 mA</td><td>Painful shock; muscles may not be able to let go ("let-go threshold")</td></tr>
+      <tr><td>&asymp; 100-200 mA</td><td>Can cause ventricular fibrillation and be fatal</td></tr>
+    </tbody>
+  </table>
+  <p>A few practical habits matter far more than memorizing thresholds: always assume a circuit is live until it has been verified otherwise with a meter, discharge capacitors before touching a circuit (they can hold a dangerous charge long after power is removed), work with one hand where practical to avoid a current path across the chest, and never work alone on anything connected to mains voltage.</p>
+
+  <h3>Electrostatic discharge (ESD)</h3>
+  <p>Static electricity built up on a person or surface can silently destroy sensitive semiconductors (especially MOSFETs) with a discharge far too small to feel. Anti-static wrist straps, ESD-safe mats, and grounded soldering equipment are standard precautions when handling bare ICs and other sensitive components.</p>',
+  16
 )
 ON DUPLICATE KEY UPDATE
   title = VALUES(title),
