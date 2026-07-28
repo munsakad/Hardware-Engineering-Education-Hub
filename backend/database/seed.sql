@@ -1785,8 +1785,76 @@ INSERT INTO lessons (course_id, slug, title, content, sort_order) VALUES
       <tr><td>Servo motor</td><td>PWM pulse width sets angle</td><td>Medium-high</td><td>Steering, robotic arm joints</td></tr>
       <tr><td>Stepper motor</td><td>Sequenced pulses per step</td><td>High (open-loop)</td><td>3D printers, precise positioning</td></tr>
     </tbody>
-  </table>',
+  </table>
+  <p>Every one of these sensor and actuator types is covered in depth, with working Arduino/C++ code, later in this course.</p>',
   1
+),
+(
+  (SELECT id FROM courses WHERE slug = 'robotics'),
+  'robot-locomotion-types',
+  'Robot Locomotion Types',
+  '<h3>Wheeled locomotion</h3>
+  <p>Most beginner and intermediate robots use wheels, since they are mechanically simple and easy to control in software, at the cost of not handling rough terrain as well as legs or tracks.</p>
+  <table class="data-table">
+    <caption>Common wheeled drive configurations</caption>
+    <thead><tr><th>Configuration</th><th>How it steers</th><th>Trade-offs</th></tr></thead>
+    <tbody>
+      <tr><td>Differential drive</td><td>Two independently driven wheels (plus one or more passive casters); turning comes from spinning the two wheels at different speeds</td><td>Simple, cheap, can turn in place, but slips sideways easily on smooth floors</td></tr>
+      <tr><td>Ackermann steering</td><td>Front wheels physically pivot, like a car; rear wheels are usually the driven ones</td><td>Mechanically more complex, but tracks more predictably at speed -- the standard choice for RC-car-based robots</td></tr>
+      <tr><td>Omni-wheel / mecanum</td><td>Wheels with small rollers around their circumference, allowing sideways slip</td><td>Can move in any direction (including sideways) without turning first, at the cost of more complex wheels and motor control</td></tr>
+      <tr><td>Tracked (tank-style)</td><td>Continuous tracks driven like a differential drive</td><td>Excellent traction and rough-terrain ability, but higher friction and power use during turns</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Legged locomotion</h3>
+  <p>Legged robots (from simple hexapods to complex bipeds) trade mechanical and control complexity for the ability to cross terrain wheels cannot -- steps, gaps, and loose or uneven ground. Even a basic hexapod typically needs independent control of 2-3 servo motors per leg (12-18 total), making it dramatically more code- and hardware-intensive than a differential-drive robot.</p>
+
+  <h3>Choosing a configuration</h3>
+  <p>For a first robotics project, differential drive is almost always the right starting point: it needs only two motors and one motor driver, the kinematics (covered in the next lesson) are the simplest of any configuration, and it is directly compatible with the DC motor and encoder techniques used throughout the rest of this course.</p>',
+  2
+),
+(
+  (SELECT id FROM courses WHERE slug = 'robotics'),
+  'kinematics-and-odometry-math',
+  'Kinematics & Odometry Math',
+  '<h3>Forward kinematics: from wheel speeds to robot motion</h3>
+  <p>For a differential-drive robot, the robot&prime;s linear velocity v (straight-ahead speed) and angular velocity &omega; (turning rate) are determined by the speeds of the left and right wheels:</p>
+  <pre><code>v = (v_right + v_left) / 2
+&omega; = (v_right - v_left) / L</code></pre>
+  <p>where L is the distance between the two wheels (the wheelbase). Equal wheel speeds (v_left = v_right) give pure straight-line motion (&omega; = 0); opposite speeds (v_right = -v_left) give a pure in-place rotation.</p>
+
+  <h3>Inverse kinematics: from desired motion to wheel speeds</h3>
+  <p>Robot control code more often needs the opposite: given a desired v and &omega;, what should each wheel&prime;s speed be? Solving the equations above:</p>
+  <pre><code>v_right = v + (&omega; &times; L) / 2
+v_left  = v - (&omega; &times; L) / 2</code></pre>
+
+  <h3>Implementing it in C++</h3>
+  <pre><code>const float WHEELBASE = 0.15;   // meters between the two wheels
+const float MAX_SPEED_MPS = 0.5;
+
+void driveDifferential(float linearVel, float angularVel, int &amp;leftPwm, int &amp;rightPwm) {
+    float vLeft  = linearVel - (angularVel * WHEELBASE) / 2.0;
+    float vRight = linearVel + (angularVel * WHEELBASE) / 2.0;
+
+    leftPwm  = constrain((int)(vLeft  / MAX_SPEED_MPS * 255), -255, 255);
+    rightPwm = constrain((int)(vRight / MAX_SPEED_MPS * 255), -255, 255);
+}</code></pre>
+  <p><code>constrain()</code> is an Arduino built-in that clamps a value into a given range -- essential here, since the raw math can easily ask for a PWM value outside the range the motor driver actually accepts.</p>
+
+  <h3>Odometry: estimating position from wheel motion</h3>
+  <p>Running the forward kinematics equations continuously, using measured wheel speeds from encoders (covered later in this course) instead of commanded ones, lets a robot estimate its own position and heading over time -- a technique called <strong>odometry</strong>:</p>
+  <pre><code>float odoX = 0, odoY = 0, heading = 0;   // robot pose estimate
+
+void updateOdometry(float vLeft, float vRight, float dt) {
+    float v = (vLeft + vRight) / 2.0;
+    float omega = (vRight - vLeft) / WHEELBASE;
+
+    odoX += v * cos(heading) * dt;
+    odoY += v * sin(heading) * dt;
+    heading += omega * dt;
+}</code></pre>
+  <p>Odometry alone always drifts over time -- small errors in wheel speed measurement and wheel slip accumulate, so the estimated position slowly diverges from the robot&prime;s true position. The Localization & Dead Reckoning lesson later in this course covers how odometry is combined with other sensors to reduce this drift.</p>',
+  3
 ),
 (
   (SELECT id FROM courses WHERE slug = 'robotics'),
@@ -1815,8 +1883,506 @@ INSERT INTO lessons (course_id, slug, title, content, sort_order) VALUES
       <tr><td>1</td><td>1</td><td>Brake</td></tr>
     </tbody>
   </table>
-  <p>Combine this truth table with PWM on the enable pin and you get full speed and direction control from just three signals: IN1, IN2, and PWM enable.</p>',
-  2
+  <p>Combine this truth table with PWM on the enable pin and you get full speed and direction control from just three signals: IN1, IN2, and PWM enable. The next lesson turns this table directly into working Arduino code.</p>',
+  4
+),
+(
+  (SELECT id FROM courses WHERE slug = 'robotics'),
+  'dc-motor-driver-code',
+  'DC Motor Control with Arduino',
+  '<h3>Wiring an H-bridge driver</h3>
+  <p>The Motor Control lesson describes the H-bridge truth table conceptually; in practice, that H-bridge lives inside a driver module (e.g. an L298N or a smaller DRV8833/TB6612), which exposes two or three logic-level control pins per motor instead of requiring the H-bridge to be built from discrete transistors.</p>
+  <table class="data-table">
+    <caption>Typical driver module pins (per motor channel)</caption>
+    <thead><tr><th>Pin</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>IN1, IN2</td><td>Direction control -- matches the H-bridge truth table from the Motor Control lesson</td></tr>
+      <tr><td>ENA / PWM</td><td>Speed control -- a PWM signal here sets how fast the motor turns</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Full direction-and-speed control code</h3>
+  <pre><code>const int IN1 = 5;
+const int IN2 = 6;
+const int ENA = 9;   // must be a PWM-capable pin
+
+void setup() {
+    pinMode(IN1, OUTPUT);
+    pinMode(IN2, OUTPUT);
+    pinMode(ENA, OUTPUT);
+}
+
+// speed: -255 (full reverse) to 255 (full forward)
+void setMotor(int speed) {
+    if (speed &gt; 0) {
+        digitalWrite(IN1, HIGH);
+        digitalWrite(IN2, LOW);
+    } else if (speed &lt; 0) {
+        digitalWrite(IN1, LOW);
+        digitalWrite(IN2, HIGH);
+    } else {
+        digitalWrite(IN1, LOW);
+        digitalWrite(IN2, LOW);   // coast
+    }
+    analogWrite(ENA, abs(speed));
+}
+
+void loop() {
+    setMotor(200);    // forward, fairly fast
+    delay(2000);
+    setMotor(-150);   // reverse, medium speed
+    delay(2000);
+    setMotor(0);      // stop
+    delay(1000);
+}</code></pre>
+
+  <h3>A two-motor differential-drive robot</h3>
+  <pre><code>const int LEFT_IN1 = 5, LEFT_IN2 = 6, LEFT_EN = 9;
+const int RIGHT_IN1 = 7, RIGHT_IN2 = 8, RIGHT_EN = 10;
+
+void setMotor(int in1, int in2, int enPin, int speed) {
+    digitalWrite(in1, speed &gt; 0);
+    digitalWrite(in2, speed &lt; 0);
+    analogWrite(enPin, abs(speed));
+}
+
+void setup() {
+    pinMode(LEFT_IN1, OUTPUT);  pinMode(LEFT_IN2, OUTPUT);  pinMode(LEFT_EN, OUTPUT);
+    pinMode(RIGHT_IN1, OUTPUT); pinMode(RIGHT_IN2, OUTPUT); pinMode(RIGHT_EN, OUTPUT);
+}
+
+void loop() {
+    setMotor(LEFT_IN1, LEFT_IN2, LEFT_EN, 200);      // both wheels forward: drive straight
+    setMotor(RIGHT_IN1, RIGHT_IN2, RIGHT_EN, 200);
+    delay(1000);
+
+    setMotor(LEFT_IN1, LEFT_IN2, LEFT_EN, -150);     // wheels in opposite directions: spin in place
+    setMotor(RIGHT_IN1, RIGHT_IN2, RIGHT_EN, 150);
+    delay(500);
+}</code></pre>
+  <p>This <code>setMotor()</code> function is the building block that the differential-drive code from the Kinematics & Odometry lesson calls twice -- once per wheel -- to turn a desired linear and angular velocity into actual motor motion.</p>',
+  5
+),
+(
+  (SELECT id FROM courses WHERE slug = 'robotics'),
+  'stepper-motor-control',
+  'Stepper Motor Control',
+  '<h3>How a stepper motor differs from a DC motor</h3>
+  <p>A DC motor spins continuously in whichever direction current is applied; a stepper motor instead rotates in small, precise, discrete increments ("steps") each time its coils are energized in the correct sequence -- typically 200 steps per full revolution (1.8&deg; per step) for a common hobby stepper. This makes position control open-loop and highly repeatable, without needing an encoder, as long as the motor never physically loses steps under excessive load.</p>
+
+  <h3>Full-step sequence (4-wire bipolar stepper)</h3>
+  <table class="truth-table">
+    <caption>A common 4-step full-step sequence</caption>
+    <thead><tr><th>Step</th><th>Coil A+</th><th>Coil A-</th><th>Coil B+</th><th>Coil B-</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+      <tr><td>2</td><td>0</td><td>1</td><td>1</td><td>0</td></tr>
+      <tr><td>3</td><td>0</td><td>1</td><td>0</td><td>1</td></tr>
+      <tr><td>4</td><td>1</td><td>0</td><td>0</td><td>1</td></tr>
+    </tbody>
+  </table>
+  <p>Cycling through this sequence in order rotates the motor one direction; reversing the sequence order reverses rotation. Microstepping (used by most modern stepper drivers) instead energizes both coils simultaneously at carefully varying intermediate current levels, producing much smaller, smoother steps than full-stepping alone.</p>
+
+  <h3>Driving a stepper directly with Arduino</h3>
+  <pre><code>const int stepPins[4] = {8, 9, 10, 11};
+const int stepSequence[4][4] = {
+    {1, 0, 1, 0},
+    {0, 1, 1, 0},
+    {0, 1, 0, 1},
+    {1, 0, 0, 1}
+};
+int currentStep = 0;
+
+void setup() {
+    for (int i = 0; i &lt; 4; i++) {
+        pinMode(stepPins[i], OUTPUT);
+    }
+}
+
+void stepMotor(bool forward) {
+    currentStep = forward ? (currentStep + 1) % 4 : (currentStep + 3) % 4;
+    for (int i = 0; i &lt; 4; i++) {
+        digitalWrite(stepPins[i], stepSequence[currentStep][i]);
+    }
+}
+
+void loop() {
+    stepMotor(true);
+    delay(5);   // delay between steps sets rotation speed
+}</code></pre>
+  <p>Most real designs instead use a dedicated stepper driver chip (e.g. an A4988 or DRV8825) between the Arduino and the motor, reducing the interface to just a STEP pin (pulsed once per step) and a DIR pin (sets direction) -- offloading the current sequencing shown above to dedicated driver hardware.</p>
+
+  <h3>Using the Stepper and AccelStepper libraries</h3>
+  <pre><code>#include &lt;Stepper.h&gt;
+
+const int STEPS_PER_REV = 200;
+Stepper myStepper(STEPS_PER_REV, 8, 9, 10, 11);
+
+void setup() {
+    myStepper.setSpeed(60);   // RPM
+}
+
+void loop() {
+    myStepper.step(200);    // one full revolution forward
+    delay(1000);
+    myStepper.step(-200);   // one full revolution backward
+    delay(1000);
+}</code></pre>
+  <p>The built-in <code>Stepper</code> library handles the step sequencing shown above internally. The third-party <code>AccelStepper</code> library goes further, adding acceleration/deceleration ramps and non-blocking stepping (compatible with the <code>millis()</code>-based patterns from the Arduino course), which matters once a stepper needs to move smoothly alongside other robot behavior instead of blocking everything else while it steps.</p>',
+  6
+),
+(
+  (SELECT id FROM courses WHERE slug = 'robotics'),
+  'servo-and-robotic-arm-control',
+  'Servo Motors & Robotic Arm Control',
+  '<h3>Multi-servo control</h3>
+  <pre><code>#include &lt;Servo.h&gt;
+
+Servo baseServo, shoulderServo, elbowServo, gripperServo;
+
+void setup() {
+    baseServo.attach(3);
+    shoulderServo.attach(5);
+    elbowServo.attach(6);
+    gripperServo.attach(9);
+}
+
+void moveArm(int base, int shoulder, int elbow, int gripper) {
+    baseServo.write(base);
+    shoulderServo.write(shoulder);
+    elbowServo.write(elbow);
+    gripperServo.write(gripper);
+}
+
+void loop() {
+    moveArm(90, 45, 120, 30);   // move to a "pick" pose
+    delay(1000);
+    moveArm(90, 45, 120, 90);   // close the gripper
+    delay(500);
+    moveArm(0, 90, 60, 90);     // move to a "place" pose, gripper still closed
+    delay(1000);
+}</code></pre>
+  <p>Sending all four <code>write()</code> calls back to back like this moves every joint toward its target angle at roughly the same time, since each servo independently tracks toward whatever angle it was last told, rather than the Arduino needing to sequence them one at a time.</p>
+
+  <h3>Smooth motion: interpolating between angles</h3>
+  <pre><code>void moveServoSmoothly(Servo &amp;servo, int fromAngle, int toAngle, int stepDelayMs) {
+    if (toAngle &gt; fromAngle) {
+        for (int angle = fromAngle; angle &lt;= toAngle; angle++) {
+            servo.write(angle);
+            delay(stepDelayMs);
+        }
+    } else {
+        for (int angle = fromAngle; angle &gt;= toAngle; angle--) {
+            servo.write(angle);
+            delay(stepDelayMs);
+        }
+    }
+}</code></pre>
+
+  <h3>Two-link arm inverse kinematics</h3>
+  <p>For a simple two-link arm (an upper arm of length L1 and a forearm of length L2), computing the shoulder and elbow angles needed to reach a target point (x, y) uses the law of cosines:</p>
+  <pre><code>float elbowAngle(float x, float y, float L1, float L2) {
+    float dist2 = x * x + y * y;
+    float cosElbow = (dist2 - L1 * L1 - L2 * L2) / (2 * L1 * L2);
+    cosElbow = constrain(cosElbow, -1.0, 1.0);   // guard against tiny floating-point overshoot
+    return acos(cosElbow);
+}
+
+float shoulderAngle(float x, float y, float L1, float L2, float elbow) {
+    float k1 = L1 + L2 * cos(elbow);
+    float k2 = L2 * sin(elbow);
+    return atan2(y, x) - atan2(k2, k1);
+}</code></pre>
+  <p>This is the same inverse-kinematics idea introduced for wheeled robots in the Kinematics & Odometry lesson, applied to a rotating-joint arm instead of wheels: given a desired end-effector position, solve backward for the joint angles that produce it.</p>',
+  7
+),
+(
+  (SELECT id FROM courses WHERE slug = 'robotics'),
+  'encoders-and-speed-measurement',
+  'Encoders & Speed Measurement',
+  '<h3>Why encoders</h3>
+  <p>Commanding a certain PWM value to a motor does not guarantee a certain speed -- battery voltage sags, friction varies, and identical motors never behave perfectly identically. An encoder measures actual shaft rotation directly, which is what makes closed-loop speed and position control (and accurate odometry) possible at all.</p>
+
+  <h3>Quadrature encoders</h3>
+  <p>A quadrature encoder outputs two square-wave signals (commonly labeled A and B), offset from each other by 90&deg; -- which of the two signals leads the other reveals the direction of rotation, not just that rotation is happening.</p>
+  <table class="truth-table">
+    <caption>Reading direction from a quadrature encoder&prime;s A/B transitions</caption>
+    <thead><tr><th>Previous (A,B)</th><th>New (A,B)</th><th>Direction</th></tr></thead>
+    <tbody>
+      <tr><td>0,0</td><td>1,0</td><td>Forward</td></tr>
+      <tr><td>1,0</td><td>1,1</td><td>Forward</td></tr>
+      <tr><td>0,0</td><td>0,1</td><td>Reverse</td></tr>
+      <tr><td>0,1</td><td>1,1</td><td>Reverse</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Counting pulses with interrupts</h3>
+  <pre><code>const int ENCODER_A = 2;   // must be an interrupt-capable pin
+const int ENCODER_B = 4;
+volatile long encoderCount = 0;
+
+void encoderISR() {
+    if (digitalRead(ENCODER_B) == HIGH) {
+        encoderCount++;
+    } else {
+        encoderCount--;
+    }
+}
+
+void setup() {
+    pinMode(ENCODER_A, INPUT_PULLUP);
+    pinMode(ENCODER_B, INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(ENCODER_A), encoderISR, RISING);
+}</code></pre>
+  <p>This follows the same interrupt-service-routine rules covered in the Arduino course: the ISR does the minimum possible work (checking pin B and incrementing or decrementing a <code>volatile</code> counter), leaving anything more involved to <code>loop()</code>.</p>
+
+  <h3>Converting pulse counts to distance and speed</h3>
+  <pre><code>const int PULSES_PER_REV = 20;      // encoder disc slots
+const float WHEEL_DIAMETER = 0.065;  // meters
+const float WHEEL_CIRCUMFERENCE = PI * WHEEL_DIAMETER;
+
+float pulsesToDistance(long pulses) {
+    return (pulses / (float)PULSES_PER_REV) * WHEEL_CIRCUMFERENCE;
+}
+
+long lastCount = 0;
+unsigned long lastSpeedTime = 0;
+
+float getWheelSpeed() {
+    long currentCount = encoderCount;
+    unsigned long currentTime = millis();
+
+    float distance = pulsesToDistance(currentCount - lastCount);
+    float dt = (currentTime - lastSpeedTime) / 1000.0;
+
+    lastCount = currentCount;
+    lastSpeedTime = currentTime;
+
+    return distance / dt;   // meters per second
+}</code></pre>
+  <p>Feeding this measured speed (rather than a commanded PWM value) into the odometry equations from the Kinematics & Odometry lesson produces a far more accurate position estimate, and feeding it into the PID controller from later in this course is what makes true closed-loop speed control possible.</p>',
+  8
+),
+(
+  (SELECT id FROM courses WHERE slug = 'robotics'),
+  'ultrasonic-and-ir-distance-sensing',
+  'Ultrasonic & IR Distance Sensing',
+  '<h3>Ultrasonic distance sensing (HC-SR04)</h3>
+  <p>An ultrasonic sensor sends a burst of sound and measures how long the echo takes to return; since sound travels at a known, roughly constant speed through air, that time directly gives distance.</p>
+  <pre><code>const int TRIG_PIN = 7;
+const int ECHO_PIN = 8;
+
+float readDistanceCm() {
+    digitalWrite(TRIG_PIN, LOW);
+    delayMicroseconds(2);
+    digitalWrite(TRIG_PIN, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(TRIG_PIN, LOW);
+
+    long durationUs = pulseIn(ECHO_PIN, HIGH, 30000);   // timeout after 30 ms (~5 m range)
+    if (durationUs == 0) return -1;                       // no echo received
+
+    return (durationUs * 0.0343) / 2.0;   // speed of sound &asymp; 343 m/s = 0.0343 cm/&micro;s
+}
+
+void setup() {
+    pinMode(TRIG_PIN, OUTPUT);
+    pinMode(ECHO_PIN, INPUT);
+    Serial.begin(9600);
+}
+
+void loop() {
+    Serial.println(readDistanceCm());
+    delay(100);
+}</code></pre>
+  <p>Dividing by 2 accounts for the sound traveling to the obstacle and back; the <code>pulseIn()</code> timeout prevents the sketch from blocking indefinitely if no echo ever returns.</p>
+
+  <h3>Infrared (IR) distance and proximity sensing</h3>
+  <table class="data-table">
+    <caption>Two common IR sensing approaches</caption>
+    <thead><tr><th>Type</th><th>How it works</th><th>Typical use</th></tr></thead>
+    <tbody>
+      <tr><td>IR reflectance sensor (digital or analog)</td><td>Emits IR light and measures reflected intensity; closer or more reflective surfaces return more light</td><td>Line following, short-range proximity, edge/cliff detection</td></tr>
+      <tr><td>IR distance sensor (e.g. Sharp GP2Y0A21)</td><td>Uses triangulation between the emitter and a position-sensitive detector to output a distance-dependent analog voltage</td><td>Medium-range distance measurement, often more consistent than ultrasonic on soft or angled surfaces</td></tr>
+    </tbody>
+  </table>
+  <pre><code>int irRaw = analogRead(A0);
+float voltage = irRaw * (5.0 / 1023.0);
+// Sharp sensors typically need a datasheet-specific curve fit rather than a
+// simple linear formula -- consult the specific sensor''s datasheet graph.</code></pre>
+
+  <h3>Choosing between them</h3>
+  <table class="data-table">
+    <caption>Ultrasonic vs. IR distance sensing</caption>
+    <thead><tr><th>Aspect</th><th>Ultrasonic</th><th>IR</th></tr></thead>
+    <tbody>
+      <tr><td>Works on dark/black surfaces</td><td>Yes -- unaffected by color</td><td>Can struggle -- dark surfaces absorb IR light</td></tr>
+      <tr><td>Works on soft/foam surfaces</td><td>Can struggle -- sound absorbed rather than reflected</td><td>Generally fine</td></tr>
+      <tr><td>Affected by ambient light (sunlight)</td><td>No</td><td>Can be, especially cheaper sensors</td></tr>
+      <tr><td>Typical response speed</td><td>Slower (limited by the speed of sound)</td><td>Faster</td></tr>
+    </tbody>
+  </table>',
+  9
+),
+(
+  (SELECT id FROM courses WHERE slug = 'robotics'),
+  'imu-and-orientation-sensing',
+  'IMU & Orientation Sensing',
+  '<h3>Accelerometers and gyroscopes</h3>
+  <table class="data-table">
+    <caption>Accelerometer vs. gyroscope</caption>
+    <thead><tr><th>Sensor</th><th>Measures</th><th>Good at</th><th>Weak point</th></tr></thead>
+    <tbody>
+      <tr><td>Accelerometer</td><td>Linear acceleration (including gravity) on each axis</td><td>Long-term tilt reference (gravity always points down)</td><td>Noisy, and confused by vibration/motion acceleration mixing with gravity</td></tr>
+      <tr><td>Gyroscope</td><td>Angular velocity (rotation rate) on each axis</td><td>Fast, smooth short-term rotation tracking</td><td>Drifts over time when integrated into an angle, since small errors accumulate</td></tr>
+    </tbody>
+  </table>
+  <p>An Inertial Measurement Unit (IMU) packages both (and often a magnetometer) into one chip, since combining them cancels out each sensor&prime;s individual weakness.</p>
+
+  <h3>Reading an I2C IMU</h3>
+  <pre><code>#include &lt;Wire.h&gt;
+
+const int MPU_ADDR = 0x68;
+
+void setup() {
+    Wire.begin();
+    Wire.beginTransmission(MPU_ADDR);
+    Wire.write(0x6B);   // power management register
+    Wire.write(0);      // wake the sensor up
+    Wire.endTransmission(true);
+    Serial.begin(9600);
+}
+
+void loop() {
+    Wire.beginTransmission(MPU_ADDR);
+    Wire.write(0x3B);   // starting register for accelerometer readings
+    Wire.endTransmission(false);
+    Wire.requestFrom(MPU_ADDR, 6, true);
+
+    int16_t accX = (Wire.read() &lt;&lt; 8) | Wire.read();
+    int16_t accY = (Wire.read() &lt;&lt; 8) | Wire.read();
+    int16_t accZ = (Wire.read() &lt;&lt; 8) | Wire.read();
+
+    Serial.print(accX); Serial.print(", ");
+    Serial.print(accY); Serial.print(", ");
+    Serial.println(accZ);
+    delay(100);
+}</code></pre>
+  <p>This follows the same I2C register-read pattern from the Arduino course&prime;s Communication Protocols lesson: write the address of the register to start reading from, then request the following bytes.</p>
+
+  <h3>Complementary filter: combining accelerometer and gyroscope</h3>
+  <pre><code>float angle = 0;
+
+float updateAngle(float accelAngle, float gyroRate, float dt) {
+    const float ALPHA = 0.98;
+    angle = ALPHA * (angle + gyroRate * dt) + (1 - ALPHA) * accelAngle;
+    return angle;
+}</code></pre>
+  <p>A complementary filter blends the gyroscope&prime;s smooth but drifting short-term estimate with the accelerometer&prime;s noisy but drift-free long-term reference, weighting mostly toward the gyroscope (here, 98%) but slowly correcting toward the accelerometer&prime;s reading over time. More sophisticated robots use a Kalman filter instead, which does the same job with a statistically optimal weighting that adapts based on each sensor&prime;s known noise characteristics, at the cost of considerably more math.</p>',
+  10
+),
+(
+  (SELECT id FROM courses WHERE slug = 'robotics'),
+  'line-following-robots',
+  'Line-Following Robots',
+  '<h3>Sensing the line</h3>
+  <p>A line-following robot typically uses an array of several IR reflectance sensors (from the Distance Sensing lesson) mounted in a row facing the floor, spaced so the line passes somewhere underneath the array.</p>
+  <pre><code>const int NUM_SENSORS = 5;
+const int sensorPins[NUM_SENSORS] = {A0, A1, A2, A3, A4};
+int sensorValues[NUM_SENSORS];
+
+void readSensors() {
+    for (int i = 0; i &lt; NUM_SENSORS; i++) {
+        sensorValues[i] = analogRead(sensorPins[i]);
+    }
+}</code></pre>
+
+  <h3>Computing a line position error</h3>
+  <p>Rather than treating each sensor independently, a weighted average turns the whole sensor array into a single number describing how far off-center the line is:</p>
+  <pre><code>float getLineError() {
+    long weightedSum = 0;
+    long total = 0;
+    const int weights[NUM_SENSORS] = {-2, -1, 0, 1, 2};
+
+    for (int i = 0; i &lt; NUM_SENSORS; i++) {
+        weightedSum += (long)sensorValues[i] * weights[i];
+        total += sensorValues[i];
+    }
+
+    if (total == 0) return 0;   // no line detected by any sensor
+    return (float)weightedSum / total;
+}</code></pre>
+  <p>A result near 0 means the line is centered; a large positive or negative result means the robot has drifted to one side and needs to steer back.</p>
+
+  <h3>Steering with proportional control</h3>
+  <pre><code>const int BASE_SPEED = 150;
+const float KP = 40.0;
+
+void loop() {
+    readSensors();
+    float error = getLineError();
+
+    int correction = (int)(KP * error);
+    int leftSpeed  = constrain(BASE_SPEED + correction, 0, 255);
+    int rightSpeed = constrain(BASE_SPEED - correction, 0, 255);
+
+    setMotor(LEFT_IN1, LEFT_IN2, LEFT_EN, leftSpeed);
+    setMotor(RIGHT_IN1, RIGHT_IN2, RIGHT_EN, rightSpeed);
+}</code></pre>
+  <p>This is a proportional (P) controller, the simplest member of the PID family covered in depth later in this course -- the steering correction scales directly with how far off-center the line is. Adding integral and derivative terms (once PID has been covered) typically makes line following noticeably smoother and lets the robot handle sharper corners at higher speed.</p>',
+  11
+),
+(
+  (SELECT id FROM courses WHERE slug = 'robotics'),
+  'obstacle-avoidance-algorithms',
+  'Obstacle Avoidance Algorithms',
+  '<h3>Reactive avoidance: a simple decision loop</h3>
+  <pre><code>const int FRONT_THRESHOLD_CM = 20;
+
+void loop() {
+    float distance = readDistanceCm();   // from the Distance Sensing lesson
+
+    if (distance &gt; 0 &amp;&amp; distance &lt; FRONT_THRESHOLD_CM) {
+        setMotor(LEFT_IN1, LEFT_IN2, LEFT_EN, 0);
+        setMotor(RIGHT_IN1, RIGHT_IN2, RIGHT_EN, 0);
+        delay(200);
+
+        setMotor(LEFT_IN1, LEFT_IN2, LEFT_EN, -150);   // reverse briefly
+        setMotor(RIGHT_IN1, RIGHT_IN2, RIGHT_EN, -150);
+        delay(300);
+
+        setMotor(LEFT_IN1, LEFT_IN2, LEFT_EN, -150);   // spin to turn away
+        setMotor(RIGHT_IN1, RIGHT_IN2, RIGHT_EN, 150);
+        delay(400);
+    } else {
+        setMotor(LEFT_IN1, LEFT_IN2, LEFT_EN, 150);    // drive forward
+        setMotor(RIGHT_IN1, RIGHT_IN2, RIGHT_EN, 150);
+    }
+}</code></pre>
+  <p>This "stop, back up, turn" sequence is simple and works reasonably well, but it is entirely reactive -- the robot has no memory of where it has already been and no real plan, so it can occasionally get stuck oscillating between two obstacles.</p>
+
+  <h3>Scanning with a servo-mounted sensor</h3>
+  <p>Sweeping a distance sensor across a range of angles with a servo, rather than only looking straight ahead, lets a robot pick the most open direction instead of just detecting that <em>something</em> is ahead:</p>
+  <pre><code>int findBestDirection() {
+    int bestAngle = 90;
+    float bestDistance = 0;
+
+    for (int angle = 30; angle &lt;= 150; angle += 15) {
+        scanServo.write(angle);
+        delay(100);   // give the servo time to reach the angle before measuring
+        float distance = readDistanceCm();
+
+        if (distance &gt; bestDistance) {
+            bestDistance = distance;
+            bestAngle = angle;
+        }
+    }
+    return bestAngle;
+}</code></pre>
+
+  <h3>Potential fields: a smoother alternative</h3>
+  <p>A more advanced technique treats obstacles as generating a virtual repulsive force and the goal as generating a virtual attractive force, and steers the robot along the combined (vector-summed) direction of both -- producing smoother, more continuous avoidance behavior than a discrete stop-and-turn sequence, though it can get trapped in local minima (e.g. a U-shaped obstacle) where the forces cancel out with no clear way forward.</p>',
+  12
 ),
 (
   (SELECT id FROM courses WHERE slug = 'robotics'),
@@ -1840,8 +2406,363 @@ INSERT INTO lessons (course_id, slug, title, content, sort_order) VALUES
       <tr><td>D (Kd)</td><td>Reduces overshoot and damps oscillation, but too high amplifies sensor noise</td></tr>
     </tbody>
   </table>
-  <p>A common tuning approach is to start with only P, increase it until the system oscillates, then back it off and add I to remove offset, and finally add D to smooth out overshoot.</p>',
-  3
+  <p>A common tuning approach is to start with only P, increase it until the system oscillates, then back it off and add I to remove offset, and finally add D to smooth out overshoot. The next lesson turns this into a reusable C++ class.</p>',
+  13
+),
+(
+  (SELECT id FROM courses WHERE slug = 'robotics'),
+  'pid-control-implementation-in-cpp',
+  'Implementing PID Control in C++',
+  '<h3>Recap: the three PID terms</h3>
+  <p>The Control Loops lesson introduces the three PID terms conceptually. Turning that into working code just means computing each term from the error every control cycle and adding them together.</p>
+
+  <h3>A reusable PID class</h3>
+  <pre><code>class PIDController {
+public:
+    PIDController(float kp, float ki, float kd)
+        : Kp(kp), Ki(ki), Kd(kd), integral(0), lastError(0) {}
+
+    float update(float setpoint, float measured, float dt) {
+        float error = setpoint - measured;
+
+        integral += error * dt;
+        float derivative = (error - lastError) / dt;
+        lastError = error;
+
+        return (Kp * error) + (Ki * integral) + (Kd * derivative);
+    }
+
+private:
+    float Kp, Ki, Kd;
+    float integral;
+    float lastError;
+};</code></pre>
+
+  <h3>Using it to hold a motor at a target speed</h3>
+  <pre><code>PIDController speedPID(2.0, 0.5, 0.1);
+unsigned long lastPidTime = 0;
+
+void loop() {
+    unsigned long now = millis();
+    float dt = (now - lastPidTime) / 1000.0;
+    lastPidTime = now;
+
+    float targetSpeed = 0.3;                // meters per second
+    float currentSpeed = getWheelSpeed();   // from the Encoders & Speed Measurement lesson
+
+    float output = speedPID.update(targetSpeed, currentSpeed, dt);
+    int pwm = constrain((int)(output * 255), -255, 255);
+
+    setMotor(LEFT_IN1, LEFT_IN2, LEFT_EN, pwm);
+}</code></pre>
+
+  <h3>Integral windup</h3>
+  <p>If the motor genuinely cannot reach the target speed (e.g. it is being commanded faster than the battery can drive it), the error never goes to zero, and the integral term keeps growing without bound -- called <strong>integral windup</strong>. When the target finally becomes reachable again, that oversized accumulated integral term causes a large overshoot before it can unwind. Clamping the integral term to a sensible range is a standard, simple fix:</p>
+  <pre><code>integral = constrain(integral + error * dt, -MAX_INTEGRAL, MAX_INTEGRAL);</code></pre>
+
+  <h3>Tuning: Ziegler-Nichols as a starting point</h3>
+  <p>One common systematic tuning method: set Ki and Kd to zero, and increase Kp alone until the system just barely starts to oscillate continuously at a constant amplitude. Note the critical gain (K_u) at which this happens and the oscillation period (T_u), then use them to compute starting values for all three gains:</p>
+  <table class="data-table">
+    <caption>Ziegler-Nichols starting-point tuning rules (classic PID)</caption>
+    <thead><tr><th>Gain</th><th>Formula</th></tr></thead>
+    <tbody>
+      <tr><td>Kp</td><td>0.6 &times; K_u</td></tr>
+      <tr><td>Ki</td><td>2 &times; Kp / T_u</td></tr>
+      <tr><td>Kd</td><td>Kp &times; T_u / 8</td></tr>
+    </tbody>
+  </table>
+  <p>These values are only a starting point, not a final answer -- real tuning almost always needs further manual adjustment against the trade-offs described in the Control Loops lesson (faster response vs. overshoot vs. sensor noise sensitivity).</p>',
+  14
+),
+(
+  (SELECT id FROM courses WHERE slug = 'robotics'),
+  'path-planning-basics',
+  'Path Planning Basics',
+  '<h3>Waypoint following</h3>
+  <p>The simplest form of path planning is a pre-defined list of (x, y) waypoints the robot should visit in order, using the odometry position estimate from the Kinematics & Odometry lesson to know how it is progressing:</p>
+  <pre><code>struct Waypoint { float x, y; };
+Waypoint path[] = {{0.5, 0.0}, {0.5, 0.5}, {0.0, 0.5}, {0.0, 0.0}};
+const int NUM_WAYPOINTS = 4;
+int currentWaypoint = 0;
+
+void driveToWaypoint(float robotX, float robotY, float robotHeading) {
+    Waypoint target = path[currentWaypoint];
+    float dx = target.x - robotX;
+    float dy = target.y - robotY;
+    float distance = sqrt(dx * dx + dy * dy);
+
+    if (distance &lt; 0.05) {   // close enough -- 5 cm tolerance
+        currentWaypoint = (currentWaypoint + 1) % NUM_WAYPOINTS;
+        return;
+    }
+
+    float targetHeading = atan2(dy, dx);
+    float headingError = targetHeading - robotHeading;
+
+    // drive forward while steering to reduce headingError, e.g. with the
+    // same proportional-steering idea from the Line-Following lesson
+}</code></pre>
+
+  <h3>Grid-based planning</h3>
+  <p>For an environment represented as a grid of free and occupied cells (e.g. built from a map, or from ultrasonic scans taken at many points), classic search algorithms like <strong>Breadth-First Search</strong> or <strong>A*</strong> can find a path from a start cell to a goal cell. A* is the most widely used in practice because it combines actual distance traveled so far with an estimated remaining distance (a heuristic, often straight-line distance to the goal) to search efficiently toward the goal instead of exploring in every direction equally.</p>
+
+  <h3>Why full path planning rarely runs directly on a small microcontroller</h3>
+  <p>A* and similar graph-search algorithms need memory proportional to the size of the map being searched -- workable on a computer, but often impractical on an 8-bit microcontroller with only a few kilobytes of SRAM. A common practical split is to run path planning on a more capable companion computer (or precompute the path offline) and send only the resulting waypoint list to the Arduino, which then just needs to execute the much simpler waypoint-following code above.</p>',
+  15
+),
+(
+  (SELECT id FROM courses WHERE slug = 'robotics'),
+  'localization-and-dead-reckoning',
+  'Localization & Dead Reckoning',
+  '<h3>Dead reckoning</h3>
+  <p>Dead reckoning means estimating current position purely from known past position plus measured motion since then -- exactly what the odometry code in the Kinematics & Odometry lesson does. It requires no external reference at all, but every small error in wheel speed measurement, wheel slip, or numerical integration compounds over time, so the position estimate drifts further from the truth the longer the robot runs.</p>
+
+  <h3>Absolute references reduce drift</h3>
+  <table class="data-table">
+    <caption>Common ways to correct dead-reckoning drift</caption>
+    <thead><tr><th>Reference</th><th>How it helps</th></tr></thead>
+    <tbody>
+      <tr><td>Known landmarks (walls, markers, beacons)</td><td>Detecting a known feature at a known map location lets the robot correct its estimated position to match</td></tr>
+      <tr><td>GPS (outdoors only)</td><td>Provides an absolute position fix, though with meters of error on cheap modules -- usually fused with, not used instead of, odometry</td></tr>
+      <tr><td>External cameras or beacons</td><td>Common in research and competition settings where infrastructure can be added to the environment</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Sensor fusion</h3>
+  <p>Rather than trusting any single sensor completely, sensor fusion combines several imperfect sources -- odometry, IMU heading, and any absolute reference available -- weighting each by how much it is trusted, similar in spirit to the complementary filter from the IMU lesson but applied to full position estimation rather than just tilt angle. A Kalman filter (or its extensions for nonlinear systems) is the standard tool for this in more advanced robots, since it formally accounts for each sensor&prime;s known noise characteristics rather than using a fixed blending weight.</p>
+
+  <h3>SLAM, briefly</h3>
+  <p>Simultaneous Localization and Mapping (SLAM) tackles an even harder version of the problem: building a map of an unknown environment and localizing within it at the same time, using neither a pre-existing map nor external position references. SLAM is well beyond what a basic microcontroller-based robot typically attempts, but it is built from the same underlying ideas covered in this lesson -- sensor fusion and probabilistic position estimation -- run at much larger scale, usually on a full computer (or a Raspberry Pi-class companion board) rather than an 8-bit microcontroller.</p>',
+  16
+),
+(
+  (SELECT id FROM courses WHERE slug = 'robotics'),
+  'robot-power-systems',
+  'Robot Power Systems',
+  '<h3>Battery chemistries</h3>
+  <table class="data-table">
+    <caption>Common robot battery types</caption>
+    <thead><tr><th>Chemistry</th><th>Nominal cell voltage</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Alkaline (AA/AAA)</td><td>1.5 V</td><td>Cheap and simple, but not rechargeable and voltage sags noticeably as they drain</td></tr>
+      <tr><td>NiMH</td><td>1.2 V</td><td>Rechargeable, moderate energy density, tolerant of abuse</td></tr>
+      <tr><td>Li-ion / LiPo</td><td>3.7 V</td><td>High energy density and steady voltage, but needs a proper charger and a protection circuit -- damaged or improperly charged cells present a real fire risk</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Powering motors and logic separately</h3>
+  <p>Motors draw large, noisy, and variable current, especially at startup and under load -- directly powering an Arduino from the same supply rail as motors can cause the board to brown out and reset when a motor draws a sudden surge. Most robot designs use two separate supplies (or at least separate regulators): one for the motors and drivers, and one clean, regulated supply just for the microcontroller and low-power sensors, sharing only a common ground connection between them.</p>
+
+  <h3>Estimating current draw and run time</h3>
+  <pre><code>float estimatedRuntimeHours(float batteryCapacityMah, float averageCurrentMa) {
+    return batteryCapacityMah / averageCurrentMa;
+}</code></pre>
+  <p>Battery capacity is rated in milliamp-hours (mAh) -- a 2000 mAh battery can theoretically supply 2000 mA for one hour, or 1000 mA for two hours, and so on, though real usable capacity is somewhat lower once battery efficiency and a sensible minimum-voltage cutoff are accounted for.</p>
+
+  <h3>Voltage regulation for robotics</h3>
+  <p>As covered in the Electricity & Electronics course&prime;s Power Supplies lesson, a linear regulator wastes the voltage difference as heat, while a switching regulator is far more efficient -- on a battery-powered robot, where every wasted milliamp shortens run time, a switching ("buck") regulator is almost always the better choice for stepping a battery pack down to a logic-level supply voltage.</p>',
+  17
+),
+(
+  (SELECT id FROM courses WHERE slug = 'robotics'),
+  'wireless-control-and-telemetry',
+  'Wireless Control & Telemetry',
+  '<h3>Bluetooth serial control</h3>
+  <p>A Bluetooth serial module (e.g. an HC-05 or HC-06) connects to the Arduino&prime;s hardware or software serial port and appears, from the code&prime;s point of view, exactly like a wired serial connection -- any code written against <code>Serial</code> works with it essentially unchanged.</p>
+  <pre><code>#include &lt;SoftwareSerial.h&gt;
+
+SoftwareSerial bluetooth(10, 11);   // RX, TX
+
+void setup() {
+    Serial.begin(9600);
+    bluetooth.begin(9600);
+}
+
+void loop() {
+    if (bluetooth.available()) {
+        char command = bluetooth.read();
+
+        switch (command) {
+            case ''F'': setMotor(LEFT_IN1, LEFT_IN2, LEFT_EN, 200);
+                        setMotor(RIGHT_IN1, RIGHT_IN2, RIGHT_EN, 200);
+                        break;
+            case ''S'': setMotor(LEFT_IN1, LEFT_IN2, LEFT_EN, 0);
+                        setMotor(RIGHT_IN1, RIGHT_IN2, RIGHT_EN, 0);
+                        break;
+        }
+    }
+}</code></pre>
+
+  <h3>RF modules (nRF24L01)</h3>
+  <p>For longer range or more reliable two-way communication than Bluetooth serial, many robots use nRF24L01 RF modules with the popular <code>RF24</code> library:</p>
+  <pre><code>#include &lt;SPI.h&gt;
+#include &lt;RF24.h&gt;
+
+RF24 radio(9, 10);   // CE, CSN pins
+const byte address[6] = "1Node";
+
+struct Command { int throttle; int steering; };
+
+void setup() {
+    radio.begin();
+    radio.openReadingPipe(0, address);
+    radio.startListening();
+}
+
+void loop() {
+    if (radio.available()) {
+        Command cmd;
+        radio.read(&amp;cmd, sizeof(cmd));
+        // convert cmd.throttle / cmd.steering into left/right motor speeds
+    }
+}</code></pre>
+
+  <h3>Sending telemetry back</h3>
+  <p>Communication does not need to be one-way -- sending sensor readings, battery voltage, or the current PID error back to a receiving computer or phone app over the same link makes debugging and tuning dramatically easier than relying only on onboard LEDs or guessing from watching the robot&prime;s behavior.</p>
+
+  <h3>A safety consideration: loss of signal</h3>
+  <p>Any wirelessly controlled robot needs a defined behavior for when the connection drops -- continuing to execute the last received command (e.g. "drive forward") is a common and serious safety hazard. A simple watchdog pattern (stop the motors if no valid command has been received recently) is standard practice:</p>
+  <pre><code>unsigned long lastCommandTime = 0;
+const unsigned long COMMAND_TIMEOUT_MS = 500;
+
+void loop() {
+    if (bluetooth.available()) {
+        lastCommandTime = millis();
+        // ... handle command ...
+    }
+
+    if (millis() - lastCommandTime &gt; COMMAND_TIMEOUT_MS) {
+        setMotor(LEFT_IN1, LEFT_IN2, LEFT_EN, 0);   // stop if the link has gone quiet
+        setMotor(RIGHT_IN1, RIGHT_IN2, RIGHT_EN, 0);
+    }
+}</code></pre>',
+  18
+),
+(
+  (SELECT id FROM courses WHERE slug = 'robotics'),
+  'mechanical-design-considerations',
+  'Mechanical Design Considerations',
+  '<h3>Center of mass and stability</h3>
+  <p>A robot&prime;s center of mass needs to stay within its support base (the area enclosed by its wheels or feet touching the ground) or it will tip over -- a taller robot, or one with heavy components mounted high up (like a raised arm carrying a payload), is more prone to tipping during acceleration, braking, or turning than a low, wide one.</p>
+
+  <h3>Gear ratios and torque</h3>
+  <p>A gear reduction trades output speed for output torque, in direct proportion: an ideal gearbox conserves power, so if a gear ratio reduces speed by a factor of N, it increases torque by that same factor of N.</p>
+  <pre><code>Output torque = Motor torque &times; Gear ratio
+Output speed  = Motor speed / Gear ratio</code></pre>
+  <p>Most small DC motors spin very fast (thousands of RPM) but produce very little torque on their own -- which is why almost every geared hobby motor used in robotics already has a built-in gearbox (often labeled, e.g., "1:48") reducing that raw motor speed down to a useful output speed with usable torque.</p>
+
+  <h3>Estimating whether a motor is strong enough</h3>
+  <pre><code>float requiredTorqueNm(float robotMassKg, float wheelRadiusM, float safetyFactor) {
+    const float g = 9.81;
+    // Simplified: torque needed to overcome the weight-related force at the wheel,
+    // ignoring friction/incline for a first estimate, with a safety margin applied.
+    return robotMassKg * g * wheelRadiusM * safetyFactor;
+}</code></pre>
+  <p>This is a deliberately simplified starting estimate, not a substitute for a full analysis including friction, acceleration, and any incline the robot needs to climb -- but it is a reasonable first sanity check before committing to a specific motor and gear ratio.</p>
+
+  <h3>Chassis material and wiring practicalities</h3>
+  <table class="data-table">
+    <caption>Common hobby chassis materials</caption>
+    <thead><tr><th>Material</th><th>Trade-offs</th></tr></thead>
+    <tbody>
+      <tr><td>Acrylic</td><td>Easy to laser-cut, rigid, but brittle -- cracks under sharp impact</td></tr>
+      <tr><td>3D-printed plastic (PLA/PETG)</td><td>Very flexible design freedom, moderate strength, easy to iterate</td></tr>
+      <tr><td>Aluminum</td><td>Strong and lightweight, but needs more specialized tools to fabricate or modify</td></tr>
+    </tbody>
+  </table>
+  <p>Beyond the structure itself, leaving slack in wiring near any moving joint, securing the battery so it cannot shift the center of mass while driving, and keeping motor wiring away from sensitive analog sensor wiring (motor noise can corrupt nearby analog readings) are all practical details that matter as much as the headline material choice.</p>',
+  19
+),
+(
+  (SELECT id FROM courses WHERE slug = 'robotics'),
+  'finite-state-machines-for-robot-behavior',
+  'Finite State Machines for Robot Behavior',
+  '<h3>Why a state machine</h3>
+  <p>A robot with more than one or two behaviors (patrol, avoid, return-to-base, low-battery-return) quickly becomes a tangle of interacting <code>if</code> statements if written without structure. A finite state machine -- the same concept covered formally in the Digital Logic Design course&prime;s Finite State Machines lesson -- keeps exactly one behavior active at a time and makes the transitions between behaviors explicit and easy to reason about.</p>
+
+  <h3>Implementing a behavior FSM in C++</h3>
+  <pre><code>enum RobotState { PATROL, AVOID, RETURN_HOME, STOPPED };
+RobotState currentState = PATROL;
+
+void updateStateMachine() {
+    float distance = readDistanceCm();
+    float batteryVoltage = readBatteryVoltage();
+
+    switch (currentState) {
+        case PATROL:
+            if (distance &gt; 0 &amp;&amp; distance &lt; 20) {
+                currentState = AVOID;
+            } else if (batteryVoltage &lt; 6.5) {
+                currentState = RETURN_HOME;
+            }
+            break;
+
+        case AVOID:
+            performAvoidanceManeuver();
+            if (distance &gt; 30 || distance &lt; 0) {
+                currentState = PATROL;
+            }
+            break;
+
+        case RETURN_HOME:
+            driveTowardHome();
+            if (isAtHome()) {
+                currentState = STOPPED;
+            }
+            break;
+
+        case STOPPED:
+            setMotor(LEFT_IN1, LEFT_IN2, LEFT_EN, 0);
+            setMotor(RIGHT_IN1, RIGHT_IN2, RIGHT_EN, 0);
+            break;
+    }
+}
+
+void loop() {
+    updateStateMachine();
+}</code></pre>
+  <p>Notice this is exactly the Moore/Mealy structure from the Digital Logic Design course, translated directly into software: a variable holding the current state, a block of logic deciding the next state from the current state and current inputs, and per-state output behavior -- just running once per <code>loop()</code> iteration instead of once per hardware clock edge.</p>
+
+  <h3>Adding hysteresis to avoid state "chattering"</h3>
+  <p>Using slightly different thresholds for entering versus leaving a state (here, entering AVOID under 20 cm but only leaving it above 30 cm) prevents the robot from rapidly flickering back and forth between two states when a sensor reading sits right at a single borderline threshold.</p>',
+  20
+),
+(
+  (SELECT id FROM courses WHERE slug = 'robotics'),
+  'safety-testing-and-debugging-robots',
+  'Safety, Testing & Debugging',
+  '<h3>Hardware emergency stop</h3>
+  <p>A physical emergency-stop (E-stop) switch that cuts power to the motors directly -- independent of whatever the microcontroller&prime;s code is currently doing -- is essential on anything larger or faster than a small desktop robot. Relying on software alone to stop a runaway robot is not a safe design, since it assumes the very code that may be misbehaving will still correctly detect the problem and respond.</p>
+
+  <h3>Testing incrementally</h3>
+  <ul>
+    <li>Test each subsystem in isolation before combining them -- confirm a motor spins the right direction and speed before adding a sensor loop on top of it, confirm a sensor reads sensible values before wiring it into an avoidance behavior.</li>
+    <li>Run a robot on blocks (wheels off the ground) the first time any new motor code is tried, so a bug cannot send it driving into something before it is caught.</li>
+    <li>Add a startup delay or explicit "arm" signal before motors can move, giving time to react if something is about to go wrong the moment power is applied.</li>
+  </ul>
+
+  <h3>Debugging with telemetry</h3>
+  <pre><code>void printDebugInfo() {
+    Serial.print("State: "); Serial.print(currentState);
+    Serial.print(" | Distance: "); Serial.print(readDistanceCm());
+    Serial.print(" | Battery: "); Serial.print(readBatteryVoltage());
+    Serial.print(" | Left PWM: "); Serial.print(leftPwm);
+    Serial.print(" | Right PWM: "); Serial.println(rightPwm);
+}</code></pre>
+  <p>Printing a single, consistent line of key variables like this (rather than scattered individual <code>print</code> statements) makes a running robot&prime;s internal state easy to follow in the Serial Monitor, and easy to log for later analysis if timestamped.</p>
+
+  <h3>Common robot-specific bugs</h3>
+  <table class="data-table">
+    <caption>Frequent robotics bugs beyond the general Arduino pitfalls</caption>
+    <thead><tr><th>Symptom</th><th>Likely cause</th></tr></thead>
+    <tbody>
+      <tr><td>Robot drives in a curve instead of straight, with equal commanded speeds</td><td>Motors are not actually matched -- mechanical friction and manufacturing variance differ between the two sides; needs a per-motor calibration offset or closed-loop speed control via encoders</td></tr>
+      <tr><td>Robot resets or behaves erratically only when motors start moving</td><td>Motor current surge browning out a shared power supply -- needs separate logic and motor power, as covered in the Robot Power Systems lesson</td></tr>
+      <tr><td>Distance sensor occasionally reports wildly wrong readings</td><td>Reflections off angled surfaces, or crosstalk between multiple ultrasonic sensors firing near-simultaneously</td></tr>
+      <tr><td>Robot behavior differs noticeably between the bench and the real floor</td><td>Real floors have friction, slope, and traction differences a bench test does not reproduce -- always validate on the actual operating surface</td></tr>
+    </tbody>
+  </table>',
+  21
 )
 ON DUPLICATE KEY UPDATE
   title = VALUES(title),
