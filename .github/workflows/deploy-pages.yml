@@ -1,0 +1,65 @@
+name: Deploy demo to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ci-only-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pci-only-password"
+          --health-interval=5s --health-timeout=5s --health-retries=30
+    env:
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ci-only-password
+      MYSQL_DATABASE: hardware_edu_hub
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Load schema and seed data into MySQL
+        run: |
+          mysql -h 127.0.0.1 -u root -p"$MYSQL_PASSWORD" --default-character-set=utf8mb4 < backend/database/schema.sql
+          mysql -h 127.0.0.1 -u root -p"$MYSQL_PASSWORD" --default-character-set=utf8mb4 < backend/database/seed.sql
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Export course catalog and build the static site
+        working-directory: backend
+        run: |
+          pip install -r requirements.txt
+          python export_static.py ../_site
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
