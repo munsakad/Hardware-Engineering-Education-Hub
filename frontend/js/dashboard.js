@@ -36,8 +36,8 @@ async function renderDashboard() {
             .map(
               (row) => `
               <tr>
-                <td><a href="course.html?slug=${encodeURIComponent(row.course_slug)}">${row.course_title}</a></td>
-                <td>${row.lesson_title}</td>
+                <td><a href="course.html?slug=${encodeURIComponent(row.course_slug)}">${escapeText(row.course_title)}</a></td>
+                <td>${escapeText(row.lesson_title)}</td>
                 <td>${new Date(row.completed_at).toLocaleDateString()}</td>
               </tr>
             `
@@ -47,7 +47,7 @@ async function renderDashboard() {
       </table>
     `;
   } catch (err) {
-    container.innerHTML = `<p class="empty-state">Could not load your progress: ${err.message}</p>`;
+    container.innerHTML = `<p class="empty-state">Could not load your progress: ${escapeText(err.message)}</p>`;
   }
 }
 

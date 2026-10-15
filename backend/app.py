@@ -5,6 +5,7 @@ from config import Config
 from routes.auth_routes import auth_bp
 from routes.course_routes import course_bp
 from routes.progress_routes import progress_bp
+from routes.learning_routes import learning_bp
 
 
 def create_app():
@@ -16,6 +17,7 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(course_bp)
     app.register_blueprint(progress_bp)
+    app.register_blueprint(learning_bp)
 
     @app.get("/api/health")
     def health():

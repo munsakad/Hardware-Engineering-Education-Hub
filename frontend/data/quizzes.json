@@ -1,0 +1,37 @@
+{
+  "electricity-electronics-basics": [
+    {"prompt":"A 12 V source is connected across a 1 kΩ resistor. What current flows?","options":["12 mA","12 A","120 mA","0.12 mA"],"answer":0,"explanation":"Ohm's law gives I = V/R = 12/1000 A = 12 mA."},
+    {"prompt":"Which instrument connection measures voltage across a resistor?","options":["In series","In parallel","Instead of the power source","Across a disconnected ammeter"],"answer":1,"explanation":"A voltmeter measures potential difference and is connected in parallel across the component."},
+    {"prompt":"Two 100 Ω resistors are connected in parallel. What is their equivalent resistance?","options":["200 Ω","100 Ω","50 Ω","10 Ω"],"answer":2,"explanation":"For two equal parallel resistors, the equivalent resistance is half of either resistor: 50 Ω."}
+  ],
+  "digital-logic-design": [
+    {"prompt":"When does a two-input AND gate output 1?","options":["Either input is 1","Both inputs are 1","Both inputs are 0","The inputs differ"],"answer":1,"explanation":"AND requires every input to be high."},
+    {"prompt":"How many distinct states can a 4-bit unsigned register represent?","options":["4","8","16","32"],"answer":2,"explanation":"Four binary bits represent 2^4 = 16 distinct states."},
+    {"prompt":"What distinguishes sequential logic from combinational logic?","options":["Sequential logic has memory","Sequential logic cannot use gates","Combinational logic needs a clock","They are identical"],"answer":0,"explanation":"Sequential circuits retain state; combinational outputs depend only on current inputs."}
+  ],
+  "pcb-design": [
+    {"prompt":"Where should a supply decoupling capacitor normally be placed?","options":["Far from the IC","Near the IC power and ground pins","Only at the board edge","In series with the signal"],"answer":1,"explanation":"Short connections reduce loop inductance and help supply fast transient current."},
+    {"prompt":"What does a PCB design-rule check primarily detect?","options":["Firmware syntax errors","Incorrect resistor colors","Layout violations such as insufficient clearance","All possible circuit faults"],"answer":2,"explanation":"DRC checks configured geometric constraints, including clearance and trace width."},
+    {"prompt":"What is a via used for?","options":["Connecting copper between PCB layers","Compiling HDL","Storing charge","Measuring temperature"],"answer":0,"explanation":"A plated via provides an electrical connection between copper layers."}
+  ],
+  "robotics": [
+    {"prompt":"Which PID term responds to accumulated error?","options":["Proportional","Integral","Derivative","Feedforward"],"answer":1,"explanation":"The integral term accumulates error over time and can reduce steady-state offset."},
+    {"prompt":"What does a wheel encoder typically measure directly?","options":["Absolute global position","Battery capacity","Wheel rotation","Motor temperature"],"answer":2,"explanation":"Encoders measure rotation; position can be estimated from it using wheel geometry."},
+    {"prompt":"Why use a motor driver instead of powering a motor from a GPIO pin?","options":["It supplies the required motor current and switching control","It eliminates the power supply","It makes all motors servos","It replaces every sensor"],"answer":0,"explanation":"GPIO pins cannot normally supply motor current. A suitable driver switches a separate motor supply."}
+  ],
+  "verilog": [
+    {"prompt":"Which assignment is normally used in a clocked sequential always block?","options":["Blocking =","Nonblocking <=","Continuous assign only","No assignments"],"answer":1,"explanation":"Nonblocking assignments model simultaneous register updates on a clock edge."},
+    {"prompt":"What does always @(posedge clk) describe?","options":["A falling-edge event","A continuous wire","A rising-edge clock event","A software thread"],"answer":2,"explanation":"posedge triggers the block on a rising transition of clk."},
+    {"prompt":"What is the main purpose of a testbench?","options":["Apply stimuli and check simulated behavior","Route PCB traces","Replace the FPGA power supply","Generate solder masks"],"answer":0,"explanation":"A testbench drives a design under test and observes or asserts its expected behavior."}
+  ],
+  "vhdl": [
+    {"prompt":"What does a VHDL entity primarily declare?","options":["PCB stack-up","The design's interface ports and generics","Only simulation results","A compiler executable"],"answer":1,"explanation":"The entity declares the external interface; an architecture describes its implementation."},
+    {"prompt":"Which operator assigns a value to a signal?","options":[":=","==","<=","=>"],"answer":2,"explanation":"VHDL uses <= for signal assignment and := for variable assignment."},
+    {"prompt":"What does rising_edge(clk) test?","options":["A rising clock transition","The clock frequency in hertz","A falling clock transition","A reset voltage"],"answer":0,"explanation":"rising_edge detects a rising transition and is commonly used in synchronous processes."}
+  ],
+  "arduino": [
+    {"prompt":"Which function runs once after startup or reset?","options":["loop()","setup()","mainLoop()","analogRead()"],"answer":1,"explanation":"Arduino calls setup once, then repeatedly calls loop."},
+    {"prompt":"Why use millis() instead of a long delay() for scheduling?","options":["It increases supply voltage","It disables interrupts","It allows other work while waiting","It makes analog inputs digital"],"answer":2,"explanation":"Elapsed-time checks let loop continue processing inputs and other tasks without blocking."},
+    {"prompt":"What does PWM control by varying duty cycle?","options":["The proportion of time a digital signal is high","The board's RAM size","The crystal frequency","The number of GPIO pins"],"answer":0,"explanation":"PWM changes the on-time fraction, which can control average power delivered to suitable loads."}
+  ]
+}

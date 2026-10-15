@@ -452,3 +452,18 @@ main {
   padding-top: 1.25rem;
   border-top: 1px solid var(--border);
 }
+
+/* Quizzes and content management */
+.quiz-question { margin: 1.5rem 0; padding: 1.25rem; border: 1px solid var(--border); border-radius: var(--radius); }
+.quiz-question legend { font-weight: 600; padding: 0 .4rem; }
+.quiz-option { display: flex; align-items: baseline; gap: .6rem; padding: .55rem; cursor: pointer; }
+.quiz-option:hover { background: var(--surface-alt); }
+.answer-review { border-left: 3px solid var(--accent); padding: .25rem 1rem; margin: 1.5rem 0; }
+.editor-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.3fr); gap: 1.5rem; }
+.field select, .field textarea { width: 100%; padding: .65rem; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); font: inherit; }
+.field textarea { resize: vertical; }
+.notice { padding: 1rem; background: var(--surface-alt); border-radius: var(--radius); }
+.text-preview { white-space: pre-wrap; padding: 1rem; margin-top: 1rem; border: 1px solid var(--border); overflow-wrap: anywhere; }
+#cms-status, #quiz-error { min-height: 1.5em; }
+#cms-content button { margin: .2rem 0; }
+@media (max-width: 800px) { .editor-grid { grid-template-columns: 1fr; } .nav-links { gap: .85rem; } }

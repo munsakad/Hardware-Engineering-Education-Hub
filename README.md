@@ -10,6 +10,48 @@ full carry-lookahead adders in both Verilog and VHDL).
 - **Backend:** Python (Flask) REST API (`/backend`)
 - **Database:** MySQL
 
+## Quizzes and content management
+
+- **Quizzes:** open `pages/quizzes.html`, select any of the seven seeded courses,
+  and log in or create a learner account. Each course has three subject-specific
+  multiple-choice questions (21 total). Submit to see your score, correct answers,
+  and explanations. Retake a quiz or review saved attempts on the dashboard.
+- **CMS:** open `pages/cms.html` from the navigation. Create a course, edit course
+  details, or select a course to create/edit lessons. Lesson editing uses plain
+  text and line breaks; saving an existing rich lesson replaces its formatting.
+  Slugs are permanent identifiers. Preview lesson text before saving, then open
+  the course catalog to see the change.
+- **Live GitHub Pages demo:** the CMS is an openly accessible, browser-local
+  sandbox. Course changes, accounts, progress and quiz attempts persist in this
+  browser only. Export the edited catalog as JSON to keep a copy. Edits do not
+  change the repository or other visitors' catalogs. Quiz answers are bundled
+  client-side, so demo quizzes are practice exercises, not secure assessments.
+- **Flask/MySQL deployment:** quiz grading runs on the server and attempts are
+  saved per authenticated learner. CMS writes require a logged-in account whose
+  email appears in the server's `ADMIN_EMAILS` environment variable. The default
+  is empty (no administrators). Register the account normally, set the allowlist
+  on the server, then restart the API. There is no public role-escalation control.
+  Course and lesson changes are shared through MySQL.
+
+For an existing database, rerun `backend/database/schema.sql` to create the new
+`quiz_attempts` table without replacing existing tables. Do not rerun `seed.sql`
+after making CMS edits unless you intend to restore the seeded course content.
+Quiz definitions live in `frontend/data/quizzes.json`; newly created courses
+show a friendly unavailable message until a quiz is added to that bank.
+
+### Feature checks
+
+```sh
+node --test frontend/js/demo-backend.test.cjs
+cd backend
+python -m unittest -v test_learning
+```
+
+The deployment workflow runs both suites before publishing. Tests cover grading,
+invalid answers, per-user history, CMS persistence, duplicate slugs, safe lesson
+text, and backend administrator authorization. Backend unit tests mock database
+calls; the deployment additionally loads the schema and exports the MySQL catalog.
+
 ## Project structure
 
 ```

@@ -16,7 +16,7 @@
     (catalog = catalog || realFetch(DATA_URL).then((r) => {
       if (!r.ok) throw new Error("Could not load course data");
       return r.json();
-    }));
+    }).then(data => read("heh_demo_catalog", data)));
 
   const read = (key, fallback) => {
     try {
@@ -51,6 +51,74 @@
   async function handle(path, method, body, headers) {
     let m;
     if (path === "/health") return reply(200, { status: "ok" });
+
+    if (path === "/quiz-attempts") {
+      const user = currentUser(headers);
+      if (!user) return reply(401, {error:"Log in to view quiz results"});
+      return reply(200, read("heh_demo_attempts", []).filter(a => a.user_id === user.id).reverse());
+    }
+    if ((m = path.match(/^\/quizzes\/([^/]+)(\/attempts)?$/))) {
+      const response = await realFetch(new URL("quizzes.json", DATA_URL));
+      if (!response.ok) throw new Error("Could not load quiz questions");
+      const bank = await response.json();
+      const slug = decodeURIComponent(m[1]), questions = bank[slug];
+      if (!questions) return reply(404, {error:"No quiz available for this course yet"});
+      if (!m[2] && method === "GET") return reply(200, {questions:questions.map(({prompt,options})=>({prompt,options}))});
+      if (m[2] && method === "POST") {
+        const user=currentUser(headers);
+        if (!user) return reply(401, {error:"Log in to save quiz results"});
+        const answers=body.answers;
+        if (!Array.isArray(answers) || answers.length!==questions.length || answers.some((a,i)=>!Number.isInteger(a)||a<0||a>=questions[i].options.length))
+          return reply(400,{error:"Answer every question with a valid option"});
+        const score=answers.filter((a,i)=>a===questions[i].answer).length;
+        const attempts=read("heh_demo_attempts",[]);
+        attempts.push({user_id:user.id,course_slug:slug,score,total:questions.length,completed_at:new Date().toISOString()});
+        localStorage.setItem("heh_demo_attempts",JSON.stringify(attempts));
+        return reply(200,{score,total:questions.length,review:questions});
+      }
+      return reply(405,{error:"Method not allowed"});
+    }
+    if (path === "/cms" && method === "GET")
+      return reply(200,{mode:"browser",message:"Demo CMS: create and edit courses and lessons in this browser. Changes affect only this device. Export JSON to keep a copy; this does not publish changes for other visitors."});
+    if (path === "/cms/export" && method === "GET") return reply(200,await courses());
+    if (path.startsWith("/cms/courses") && ["POST","PUT"].includes(method)) {
+      const match=path.match(/^\/cms\/courses(?:\/([^/]+))?(?:\/lessons(?:\/([^/]+))?)?$/);
+      if (!match) return reply(404,{error:"Not found"});
+      const all=JSON.parse(JSON.stringify(await courses()));
+      const isLesson=path.includes("/lessons");
+      const slug=match[1] && decodeURIComponent(match[1]);
+      let course=all.find(c=>c.slug===slug);
+      const fail=message=>reply(400,{error:message});
+      const text=(key,max,required=true)=>typeof body[key]==="string" && body[key].trim().length<=max && (!required||body[key].trim().length>0);
+      if (!text("title",150)) return fail("Title must contain 1–150 characters");
+      if (isLesson) {
+        if (!course) return reply(404,{error:"Course not found"});
+        if (!text("text",100000)) return fail("Lesson text must contain 1–100000 characters");
+        const lessonSlug=match[2] ? decodeURIComponent(match[2]) : body.slug;
+        let lesson=course.lessons.find(l=>l.slug===lessonSlug);
+        if (method==="PUT" && !lesson) return reply(404,{error:"Lesson not found"});
+        if (method==="POST") {
+          if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(lessonSlug||"") || lessonSlug.length>80) return fail("Use a valid lesson slug");
+          if (lesson) return reply(409,{error:"That lesson slug already exists"});
+          lesson={id:Date.now(),slug:lessonSlug,sort_order:999};course.lessons.push(lesson);
+        }
+        const escaped=body.text.trim().replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+        Object.assign(lesson,{title:body.title.trim(),content:"<p>"+escaped.replaceAll("\n","<br>")+"</p>"});
+        localStorage.setItem("heh_demo_catalog",JSON.stringify(all));catalog=Promise.resolve(all);
+        return reply(200,{slug:lessonSlug});
+      }
+      if (!text("category",60)||!text("description",5000,false)) return fail("Provide a category and a description of at most 5000 characters");
+      if (method==="PUT" && !course) return reply(404,{error:"Course not found"});
+      if (method==="POST") {
+        if (slug) return fail("Create a course at /cms/courses");
+        if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(body.slug||"") || body.slug.length>80) return fail("Use a valid course slug");
+        if (all.some(c=>c.slug===body.slug)) return reply(409,{error:"That course slug already exists"});
+        course={id:Date.now(),slug:body.slug,lessons:[]};all.push(course);
+      }
+      Object.assign(course,{title:body.title.trim(),category:body.category.trim(),description:body.description.trim()});
+      localStorage.setItem("heh_demo_catalog",JSON.stringify(all));catalog=Promise.resolve(all);
+      return reply(200,{slug:course.slug});
+    }
 
     if (path === "/auth/register" && method === "POST") {
       const username = (body.username || "").trim();
@@ -176,7 +244,7 @@
       "font:12.5px/1.5 system-ui,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.3)";
     note.innerHTML =
       '<strong style="color:#fff">Static demo.</strong> Lessons are exported from the MySQL seed data by CI; ' +
-      "the Flask API is emulated in your browser, so accounts and progress are saved only on this device. " +
+      "the Flask API is emulated in your browser. Accounts, progress, quiz results and CMS edits are saved only on this device. " +
       '<a href="' + REPO_URL + '" style="color:#6ea2ff">Source</a>' +
       '<button aria-label="Dismiss" style="position:absolute;top:4px;right:8px;background:none;border:0;' +
       'color:#8a99a8;font-size:16px;cursor:pointer">&times;</button>';

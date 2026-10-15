@@ -48,7 +48,15 @@ jobs:
         working-directory: backend
         run: |
           pip install -r requirements.txt
+          python -m unittest -v test_learning
           python export_static.py ../_site
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check quiz and demo CMS behavior
+        run: node --test frontend/js/demo-backend.test.cjs
 
       - uses: actions/upload-pages-artifact@v3
         with:

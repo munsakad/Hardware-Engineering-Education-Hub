@@ -40,3 +40,13 @@ CREATE TABLE IF NOT EXISTS user_progress (
   FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE,
   UNIQUE KEY unique_user_lesson (user_id, lesson_id)
 ) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS quiz_attempts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  course_slug VARCHAR(80) NOT NULL,
+  score INT NOT NULL,
+  total INT NOT NULL,
+  completed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;

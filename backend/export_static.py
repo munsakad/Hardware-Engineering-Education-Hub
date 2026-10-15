@@ -36,7 +36,7 @@ def main(out_dir):
     out = Path(out_dir).resolve()
     if out.exists():
         shutil.rmtree(out)
-    shutil.copytree(FRONTEND, out)
+    shutil.copytree(FRONTEND, out, ignore=shutil.ignore_patterns("*.test.cjs"))
 
     courses = export_courses()
     (out / "data").mkdir(exist_ok=True)

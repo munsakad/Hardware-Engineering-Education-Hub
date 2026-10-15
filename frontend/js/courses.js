@@ -13,15 +13,15 @@ async function renderCourseCatalog() {
       .map(
         (course) => `
         <a class="card" href="course.html?slug=${encodeURIComponent(course.slug)}">
-          <span class="tag">${course.category}</span>
-          <h3>${course.title}</h3>
-          <p>${course.description || ""}</p>
+          <span class="tag">${escapeText(course.category)}</span>
+          <h3>${escapeText(course.title)}</h3>
+          <p>${escapeText(course.description || "")}</p>
         </a>
       `
       )
       .join("");
   } catch (err) {
-    grid.innerHTML = `<p class="empty-state">Could not load courses: ${err.message}</p>`;
+    grid.innerHTML = `<p class="empty-state">Could not load courses: ${escapeText(err.message)}</p>`;
   }
 }
 
@@ -42,7 +42,7 @@ async function renderCourseDetail() {
   try {
     course = await apiRequest(`/courses/${encodeURIComponent(slug)}`);
   } catch (err) {
-    container.innerHTML = `<p class="empty-state">Could not load course: ${err.message}</p>`;
+    container.innerHTML = `<p class="empty-state">Could not load course: ${escapeText(err.message)}</p>`;
     return;
   }
 
@@ -63,8 +63,9 @@ async function renderCourseDetail() {
   document.title = `${course.title} — Hardware Engineering Education Hub`;
 
   container.innerHTML = `
-    <h1>${course.title}</h1>
-    <p>${course.description || ""}</p>
+    <h1>${escapeText(course.title)}</h1>
+    <p><a class="btn btn-secondary" href="quiz.html?slug=${encodeURIComponent(slug)}">Take the course quiz</a></p>
+    <p>${escapeText(course.description || "")}</p>
     <div class="course-layout">
       <ul class="lesson-list">
         ${course.lessons
@@ -73,7 +74,7 @@ async function renderCourseDetail() {
             <li>
               <a href="course.html?slug=${encodeURIComponent(slug)}&lesson=${encodeURIComponent(lesson.slug)}"
                  class="${lesson.slug === activeLessonSlug ? "active" : ""}">
-                <span>${lesson.title}</span>
+                <span>${escapeText(lesson.title)}</span>
                 ${completedSlugs.has(lesson.slug) ? '<span class="done-mark">&#10003;</span>' : ""}
               </a>
             </li>
@@ -102,7 +103,7 @@ async function renderLesson(courseSlug, lessonSlug, alreadyCompleted) {
     );
 
     lessonContentEl.innerHTML = `
-      <h2>${lesson.title}</h2>
+      <h2>${escapeText(lesson.title)}</h2>
       <div class="lesson-body">${lesson.content || ""}</div>
       <div class="lesson-actions">
         ${
@@ -128,12 +129,12 @@ async function renderLesson(courseSlug, lessonSlug, alreadyCompleted) {
         } catch (err) {
           completeBtn.disabled = false;
           completeBtn.textContent = "Mark as complete";
-          alert(`Could not save progress: ${err.message}`);
+          alert(`Could not save progress: ${escapeText(err.message)}`);
         }
       });
     }
   } catch (err) {
-    lessonContentEl.innerHTML = `<p class="empty-state">Could not load lesson: ${err.message}</p>`;
+    lessonContentEl.innerHTML = `<p class="empty-state">Could not load lesson: ${escapeText(err.message)}</p>`;
   }
 }
 
