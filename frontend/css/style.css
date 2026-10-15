@@ -86,6 +86,10 @@ svg {
   align-items: center;
 }
 
+.nav-links [data-nav-auth] {
+  align-items: center;
+}
+
 .nav-links a {
   color: var(--text-muted);
 }
